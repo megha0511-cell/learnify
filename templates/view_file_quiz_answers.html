@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<h2>📘 Correct Answers</h2>
+<p class="muted">{{ quiz.file_name }}</p>
+
+{% for q in questions %}
+  <div class="content-box">
+
+    <p><strong>Q{{ loop.index }}.</strong> {{ q.question }}</p>
+    <p class="muted">{{ q.marks }} marks · {{ q.question_type }}</p>
+
+    {% if q.question_type == "mcq" %}
+      <p><strong>Correct Option:</strong> {{ q.correct_answer }}</p>
+
+      <ul>
+        {% for opt in q.options %}
+          <li>{{ opt }}</li>
+        {% endfor %}
+      </ul>
+
+    {% else %}
+      <p><strong>Model Answer:</strong></p>
+      <div class="answer-box">
+        {{ q.correct_answer }}
+      </div>
+    {% endif %}
+
+  </div>
+{% endfor %}
+
+<a href="javascript:history.back()" class="btn-soft">← Back</a>
+
+{% endblock %}

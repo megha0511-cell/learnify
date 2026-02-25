@@ -1,0 +1,25 @@
+body {
+    background: #f4f6f9;
+    font-family: 'Segoe UI', sans-serif;
+}
+
+.card {
+    border-radius: 12px;
+}
+
+.btn-primary {
+    background-color: #4f46e5;
+    border: none;
+}
+
+.btn-primary:hover {
+    background-color: #4338ca;
+}
+
+.navbar {
+    background-color: #4f46e5;
+}
+
+.navbar-brand, .nav-link {
+    color: white !important;
+}

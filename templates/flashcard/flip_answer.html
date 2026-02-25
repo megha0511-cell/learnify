@@ -1,0 +1,462 @@
+{% extends "base.html" %}
+{% block title %}Flip & Answer{% endblock %}
+{% block content %}
+
+<style>
+  :root {
+    --bg:        #f4f3ff;
+    --surface:   #ffffff;
+    --border:    #ece9ff;
+    --purple:    #6c5ce7;
+    --purple-lt: #a29bfe;
+    --green:     #00b894;
+    --orange:    #fd9644;
+    --red:       #e17055;
+    --text:      #1e1b3a;
+    --muted:     #8b87a8;
+    --radius:    16px;
+    --shadow:    0 4px 24px rgba(108,92,231,0.08);
+  }
+
+  body { background: var(--bg); }
+
+  .fa-wrapper {
+    min-height: 100vh;
+    padding: 2rem 1.5rem;
+    max-width: 720px;
+    margin: 0 auto;
+    font-family: 'Segoe UI', sans-serif;
+  }
+
+  /* ── Top bar ── */
+  .fa-topbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 2rem;
+  }
+
+  .fa-back {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    color: var(--purple);
+    font-size: 0.88rem;
+    font-weight: 600;
+    text-decoration: none;
+    transition: gap .2s;
+  }
+  .fa-back:hover { gap: 10px; }
+
+  .fa-topic-badge {
+    background: var(--border);
+    color: var(--purple);
+    font-size: 0.8rem;
+    font-weight: 600;
+    padding: 5px 14px;
+    border-radius: 20px;
+  }
+
+  /* ── Progress ── */
+  .fa-progress-wrap {
+    margin-bottom: 2rem;
+  }
+
+  .fa-progress-meta {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.82rem;
+    color: var(--muted);
+    font-weight: 600;
+    margin-bottom: 8px;
+  }
+
+  .fa-progress-track {
+    width: 100%;
+    height: 8px;
+    background: var(--border);
+    border-radius: 999px;
+    overflow: hidden;
+  }
+
+  .fa-progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--purple), var(--purple-lt));
+    border-radius: 999px;
+    transition: width .5s cubic-bezier(.4,0,.2,1);
+    width: 0%;
+  }
+
+  /* ── Score pills ── */
+  .fa-scores {
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+    margin-bottom: 2rem;
+  }
+
+  .score-pill {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 16px;
+    border-radius: 999px;
+    font-size: 0.85rem;
+    font-weight: 700;
+  }
+
+  .score-pill.knew   { background: #d4f5ec; color: #00a67e; }
+  .score-pill.dunno  { background: #fde8e5; color: #c0392b; }
+
+  /* ── Card ── */
+  .fa-card {
+    background: var(--surface);
+    border: 1.5px solid var(--border);
+    border-radius: 24px;
+    box-shadow: 0 8px 40px rgba(108,92,231,0.12);
+    min-height: 360px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 3rem 2.5rem;
+    text-align: center;
+    position: relative;
+    transition: transform .3s ease, box-shadow .3s ease;
+    animation: cardIn .35s cubic-bezier(.4,0,.2,1) both;
+  }
+
+  @keyframes cardIn {
+    from { opacity: 0; transform: translateY(20px) scale(.97); }
+    to   { opacity: 1; transform: translateY(0) scale(1); }
+  }
+
+  .fa-card-label {
+    position: absolute;
+    top: 1.4rem;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 0.72rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .1em;
+    color: var(--muted);
+    background: var(--bg);
+    padding: 4px 14px;
+    border-radius: 20px;
+    border: 1.5px solid var(--border);
+    white-space: nowrap;
+  }
+
+  .fa-card-label.answer-label {
+    background: #d4f5ec;
+    color: #00a67e;
+    border-color: #b2eedd;
+  }
+
+  .fa-card-text {
+    font-size: 1.35rem;
+    font-weight: 700;
+    color: var(--text);
+    line-height: 1.5;
+    margin: 1rem 0 2rem;
+  }
+
+  .fa-card-text.answer-text {
+    color: var(--purple);
+  }
+
+  /* ── Buttons ── */
+  .btn-flip {
+    background: linear-gradient(135deg, var(--purple), var(--purple-lt));
+    color: #fff;
+    border: none;
+    padding: 14px 36px;
+    border-radius: 14px;
+    font-size: 1rem;
+    font-weight: 700;
+    cursor: pointer;
+    box-shadow: 0 4px 16px rgba(108,92,231,0.3);
+    transition: transform .15s, box-shadow .15s;
+  }
+  .btn-flip:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba(108,92,231,0.4);
+  }
+  .btn-flip:active { transform: scale(.97); }
+
+  .fa-answer-btns {
+    display: flex;
+    gap: 1rem;
+    justify-content: center;
+    flex-wrap: wrap;
+  }
+
+  .btn-knew, .btn-dunno {
+    padding: 13px 28px;
+    border-radius: 14px;
+    font-size: 0.95rem;
+    font-weight: 700;
+    border: none;
+    cursor: pointer;
+    transition: transform .15s, box-shadow .15s;
+  }
+
+  .btn-knew {
+    background: linear-gradient(135deg, #00b894, #55efc4);
+    color: #fff;
+    box-shadow: 0 4px 16px rgba(0,184,148,0.3);
+  }
+  .btn-knew:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba(0,184,148,0.4);
+  }
+
+  .btn-dunno {
+    background: linear-gradient(135deg, #e17055, #fab1a0);
+    color: #fff;
+    box-shadow: 0 4px 16px rgba(225,112,85,0.3);
+  }
+  .btn-dunno:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba(225,112,85,0.4);
+  }
+
+  /* ── Completion ── */
+  .fa-complete {
+    background: var(--surface);
+    border: 1.5px solid var(--border);
+    border-radius: 24px;
+    box-shadow: 0 8px 40px rgba(108,92,231,0.12);
+    padding: 3.5rem 2.5rem;
+    text-align: center;
+    display: none;
+    animation: cardIn .4s ease both;
+  }
+
+  .fa-complete .trophy {
+    font-size: 4rem;
+    margin-bottom: 1rem;
+  }
+
+  .fa-complete h2 {
+    font-size: 1.8rem;
+    font-weight: 800;
+    color: var(--text);
+    margin: 0 0 8px;
+  }
+
+  .fa-complete p {
+    color: var(--muted);
+    margin: 0 0 2rem;
+  }
+
+  .complete-stats {
+    display: flex;
+    gap: 1rem;
+    justify-content: center;
+    margin-bottom: 2rem;
+    flex-wrap: wrap;
+  }
+
+  .complete-stat {
+    background: var(--bg);
+    border: 1.5px solid var(--border);
+    border-radius: var(--radius);
+    padding: 1rem 1.5rem;
+    min-width: 120px;
+  }
+
+  .complete-stat .cs-val {
+    font-size: 2rem;
+    font-weight: 800;
+    color: var(--purple);
+    line-height: 1;
+  }
+
+  .complete-stat .cs-label {
+    font-size: 0.75rem;
+    color: var(--muted);
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: .05em;
+    margin-top: 4px;
+  }
+
+  .complete-btns {
+    display: flex;
+    gap: 1rem;
+    justify-content: center;
+    flex-wrap: wrap;
+  }
+
+  .btn-again {
+    background: linear-gradient(135deg, var(--purple), var(--purple-lt));
+    color: #fff;
+    padding: 12px 28px;
+    border-radius: 12px;
+    font-weight: 700;
+    text-decoration: none;
+    font-size: 0.95rem;
+    transition: transform .15s;
+  }
+  .btn-again:hover { transform: translateY(-2px); color: #fff; }
+
+  .btn-dash {
+    background: var(--bg);
+    color: var(--purple);
+    border: 1.5px solid var(--border);
+    padding: 12px 28px;
+    border-radius: 12px;
+    font-weight: 700;
+    text-decoration: none;
+    font-size: 0.95rem;
+    transition: background .15s;
+  }
+  .btn-dash:hover { background: var(--border); color: var(--purple); }
+</style>
+
+<div class="fa-wrapper">
+
+  <!-- Top bar -->
+  <div class="fa-topbar">
+    <a href="{{ url_for('dashboard') }}" class="fa-back">← Back</a>
+    <span class="fa-topic-badge">📚 {{ topic }}</span>
+  </div>
+
+  <!-- Progress -->
+  <div class="fa-progress-wrap">
+    <div class="fa-progress-meta">
+      <span>Progress</span>
+      <span><span id="current-card">1</span> / <span id="total-cards">{{ flashcards|length }}</span></span>
+    </div>
+    <div class="fa-progress-track">
+      <div class="fa-progress-fill" id="progress-bar"></div>
+    </div>
+  </div>
+
+  <!-- Live score pills -->
+  <div class="fa-scores">
+    <div class="score-pill knew">✓ Knew &nbsp;<span id="knew-live">0</span></div>
+    <div class="score-pill dunno">✗ Missed &nbsp;<span id="dunno-live">0</span></div>
+  </div>
+
+  <!-- Card container -->
+  <div id="card-container"></div>
+
+  <!-- Completion -->
+  <div class="fa-complete" id="completion-message">
+    <div class="trophy">🏆</div>
+    <h2>Session Complete!</h2>
+    <p>You've reviewed all {{ flashcards|length }} flashcards</p>
+
+    <div class="complete-stats">
+      <div class="complete-stat">
+        <div class="cs-val" id="knew-count">0</div>
+        <div class="cs-label">✓ Knew</div>
+      </div>
+      <div class="complete-stat">
+        <div class="cs-val" id="review-count">0</div>
+        <div class="cs-label">✗ Missed</div>
+      </div>
+      <div class="complete-stat">
+        <div class="cs-val" id="pct-count">0%</div>
+        <div class="cs-label">Accuracy</div>
+      </div>
+    </div>
+
+    <div class="complete-btns">
+      <a href="{{ url_for('flashcard.flip_answer_game_file', file_id=file_id) }}" class="btn-again">🔄 Play Again</a>
+      <a href="{{ url_for('dashboard') }}" class="btn-dash">Dashboard</a>
+    </div>
+  </div>
+
+</div>
+
+<script>
+const flashcards = {{ flashcards|tojson }};
+const sessionId  = {{ session_id }};
+let currentIndex   = 0;
+let knewCount      = 0;
+let didntKnowCount = 0;
+
+function renderCard() {
+  if (currentIndex >= flashcards.length) {
+    showCompletion();
+    return;
+  }
+
+  const card = flashcards[currentIndex];
+
+  document.getElementById('card-container').innerHTML = `
+    <div class="fa-card" id="fa-card">
+      <span class="fa-card-label">Question ${currentIndex + 1}</span>
+      <p class="fa-card-text">${card.question}</p>
+      <button class="btn-flip" onclick="flipCard()">Flip to See Answer</button>
+    </div>
+  `;
+
+  updateProgress();
+}
+
+function flipCard() {
+  const card = flashcards[currentIndex];
+
+  document.getElementById('card-container').innerHTML = `
+    <div class="fa-card" id="fa-card">
+      <span class="fa-card-label answer-label">Answer</span>
+      <p class="fa-card-text answer-text">${card.answer}</p>
+      <div class="fa-answer-btns">
+        <button class="btn-knew"  onclick="markCard(true)">✓ I Knew This</button>
+        <button class="btn-dunno" onclick="markCard(false)">✗ Didn't Know</button>
+      </div>
+    </div>
+  `;
+}
+
+async function markCard(knewIt) {
+  const card = flashcards[currentIndex];
+
+  if (knewIt) knewCount++;
+  else didntKnowCount++;
+
+  document.getElementById('knew-live').textContent  = knewCount;
+  document.getElementById('dunno-live').textContent = didntKnowCount;
+
+  try {
+    await fetch('/flashcard/game/flip-answer/submit', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({
+        flashcard_id: card.id,
+        knew_it: knewIt,
+        session_id: sessionId
+      })
+    });
+  } catch(e) { console.error(e); }
+
+  currentIndex++;
+  renderCard();
+}
+
+function updateProgress() {
+  const pct = (currentIndex / flashcards.length) * 100;
+  document.getElementById('progress-bar').style.width = pct + '%';
+  document.getElementById('current-card').textContent = currentIndex + 1;
+}
+
+function showCompletion() {
+  document.getElementById('card-container').style.display  = 'none';
+  document.getElementById('completion-message').style.display = 'block';
+  document.getElementById('knew-count').textContent   = knewCount;
+  document.getElementById('review-count').textContent = didntKnowCount;
+  const total = flashcards.length;
+  const pct   = total > 0 ? Math.round((knewCount / total) * 100) : 0;
+  document.getElementById('pct-count').textContent = pct + '%';
+  document.getElementById('progress-bar').style.width = '100%';
+}
+
+renderCard();
+</script>
+
+{% endblock %}

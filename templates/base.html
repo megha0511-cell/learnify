@@ -1,0 +1,489 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>{% block title %}Learnify{% endblock %}</title>
+
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard.css') }}">
+  <link href="https://fonts.googleapis.com/css2?family=Sora:wght@600;700;800&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --purple:    #6c5ce7;
+      --purple-lt: #a29bfe;
+      --bg:        #f4f3ff;
+      --surface:   #ffffff;
+      --border:    #ece9ff;
+      --text:      #1e1b3a;
+      --muted:     #8b87a8;
+      --sidebar-w: 240px;
+      --topbar-h:  60px;
+    }
+
+    body {
+      font-family: 'DM Sans', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      overflow-x: hidden;
+    }
+
+    h1,h2,h3,h4,h5 { font-family: 'Sora', sans-serif; }
+
+    /* ══════════════════
+       LAYOUT SHELL
+    ══════════════════ */
+    .app {
+      display: flex;
+      min-height: 100vh;
+    }
+
+    /* ══════════════════
+       SIDEBAR
+    ══════════════════ */
+    .sidebar {
+      width: var(--sidebar-w);
+      min-height: 100vh;
+      background: var(--surface);
+      border-right: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      position: fixed;
+      top: 0; left: 0;
+      z-index: 100;
+      transition: transform 0.28s cubic-bezier(0.4, 0, 0.2, 1),
+                  opacity  0.28s ease;
+      overflow: hidden;
+      box-shadow: 2px 0 12px rgba(108,92,231,0.06);
+    }
+
+    /* Hidden — slides fully off screen left */
+    .sidebar.hidden {
+      transform: translateX(-100%);
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    /* Brand row */
+    .sidebar-brand {
+      display: flex;
+      align-items: center;
+      gap: 11px;
+      padding: 0 18px;
+      height: var(--topbar-h);
+      border-bottom: 1px solid var(--border);
+      flex-shrink: 0;
+    }
+
+    .brand-icon {
+      width: 32px; height: 32px;
+      background: linear-gradient(135deg, var(--purple), var(--purple-lt));
+      border-radius: 9px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 16px;
+      flex-shrink: 0;
+      box-shadow: 0 3px 10px rgba(108,92,231,0.3);
+    }
+
+    .brand-name {
+      font-family: 'Sora', sans-serif;
+      font-size: 17px;
+      font-weight: 800;
+      color: var(--text);
+      white-space: nowrap;
+    }
+
+    .brand-name span { color: var(--purple); }
+
+    /* Nav links */
+    .sidebar nav {
+      flex: 1;
+      padding: 10px;
+      overflow-y: auto;
+    }
+
+    .sidebar nav a {
+      display: flex;
+      align-items: center;
+      gap: 11px;
+      padding: 11px 13px;
+      border-radius: 10px;
+      text-decoration: none;
+      font-size: 14px;
+      font-weight: 500;
+      color: var(--muted);
+      white-space: nowrap;
+      transition: background 0.15s, color 0.15s;
+      margin-bottom: 2px;
+    }
+
+    .sidebar nav a:hover {
+      background: var(--bg);
+      color: var(--text);
+    }
+
+    .sidebar nav a.active {
+      background: linear-gradient(135deg,
+        rgba(108,92,231,0.12),
+        rgba(162,155,254,0.08));
+      color: var(--purple);
+      font-weight: 600;
+      border: 1px solid rgba(108,92,231,0.15);
+    }
+
+    .nav-icon {
+      font-size: 17px;
+      flex-shrink: 0;
+      width: 22px;
+      text-align: center;
+    }
+
+    /* Bottom links */
+    .sidebar-bottom {
+      padding: 10px;
+      border-top: 1px solid var(--border);
+      flex-shrink: 0;
+    }
+
+    .sidebar-bottom a {
+      display: flex;
+      align-items: center;
+      gap: 11px;
+      padding: 10px 13px;
+      border-radius: 10px;
+      text-decoration: none;
+      font-size: 14px;
+      font-weight: 500;
+      color: var(--muted);
+      transition: all 0.15s;
+      margin-bottom: 2px;
+    }
+
+    .sidebar-bottom a:hover {
+      background: var(--bg);
+      color: var(--text);
+    }
+
+    .sidebar-bottom .logout-link:hover {
+      background: #fff0ee;
+      color: #e17055;
+    }
+
+    /* ══════════════════
+       TOPBAR
+    ══════════════════ */
+    .topbar {
+      position: fixed;
+      top: 0; right: 0;
+      left: var(--sidebar-w);   /* shifts with sidebar */
+      height: var(--topbar-h);
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 20px;
+      z-index: 99;
+      transition: left 0.28s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    /* When sidebar hidden — topbar stretches full width */
+    .topbar.sidebar-hidden {
+      left: 0;
+    }
+
+    .topbar-left {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+
+    /* Hamburger */
+    .hamburger {
+      width: 36px; height: 36px;
+      background: transparent;
+      border: none;
+      border-radius: 8px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 5px;
+      cursor: pointer;
+      transition: background 0.15s;
+      flex-shrink: 0;
+      padding: 0;
+    }
+
+    .hamburger:hover { background: var(--bg); }
+
+    .hamburger .bar {
+      width: 18px;
+      height: 2px;
+      background: var(--muted);
+      border-radius: 2px;
+      transition: background 0.15s;
+    }
+
+    .hamburger:hover .bar { background: var(--purple); }
+
+    /* Brand in topbar (shows when sidebar hidden) */
+    .topbar-brand {
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      text-decoration: none;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.2s ease;
+    }
+
+    .topbar-brand.show {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .topbar-brand-icon {
+      width: 28px; height: 28px;
+      background: linear-gradient(135deg, var(--purple), var(--purple-lt));
+      border-radius: 7px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 14px;
+    }
+
+    .topbar-brand-name {
+      font-family: 'Sora', sans-serif;
+      font-size: 16px;
+      font-weight: 800;
+      color: var(--text);
+    }
+
+    .topbar-brand-name span { color: var(--purple); }
+
+    /* User pill */
+    .topbar-user {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 5px 12px 5px 5px;
+      background: var(--bg);
+      border-radius: 30px;
+      border: 1px solid var(--border);
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--text);
+    }
+
+    .topbar-avatar {
+      width: 28px; height: 28px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--purple), var(--purple-lt));
+      display: flex; align-items: center; justify-content: center;
+      font-size: 12px;
+      font-weight: 700;
+      color: #fff;
+      font-family: 'Sora', sans-serif;
+    }
+
+    /* ══════════════════
+       MAIN CONTENT
+    ══════════════════ */
+    .main {
+      margin-left: var(--sidebar-w);
+      margin-top: var(--topbar-h);
+      padding: 28px 30px 60px;
+      width: calc(100% - var(--sidebar-w));
+      min-height: calc(100vh - var(--topbar-h));
+      transition: margin-left 0.28s cubic-bezier(0.4, 0, 0.2, 1),
+                  width      0.28s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    /* Expand to full width when sidebar hidden */
+    .main.sidebar-hidden {
+      margin-left: 0;
+      width: 100%;
+    }
+
+    @media (max-width: 600px) {
+      .main { padding: 20px 16px 50px; }
+      .topbar-user span { display: none; }
+    }
+    /* ── FOOTER ── */
+.footer {
+  background-color: #0f0f1a;
+  text-align: center;
+  padding: 18px 20px;
+  font-family: 'Nunito', sans-serif;
+  font-size: 0.88rem;
+  color: #777;
+}
+
+.footer a {
+  color: #aaa;
+  text-decoration: none;
+  margin: 0 2px;
+}
+
+.footer a:hover {
+  color: #fff;
+}
+  </style>
+</head>
+
+<body>
+
+<div class="app">
+
+  <!-- ══════════════════
+       SIDEBAR
+  ══════════════════ -->
+  <aside class="sidebar" id="sidebar">
+
+    <div class="sidebar-brand">
+      <div class="brand-icon">✦</div>
+      <div class="brand-name">Learn<span>ify</span></div>
+    </div>
+
+    <nav>
+      <a href="/dashboard"
+         data-tooltip="Dashboard"
+         class="{% if active=='dashboard' %}active{% endif %}">
+        <span class="nav-icon">🏠</span> Dashboard
+      </a>
+
+      <a href="/my-topics"
+         class="{% if active=='topics' %}active{% endif %}">
+        <span class="nav-icon">📘</span> My Topics
+      </a>
+
+      <a href="/add-topic"
+         class="{% if active=='upload' %}active{% endif %}">
+        <span class="nav-icon">⬆️</span> Upload Topic
+      </a>
+
+      <a href="/quizzes"
+         class="{% if active=='quizzes' %}active{% endif %}">
+        <span class="nav-icon">📝</span> Quizzes
+      </a>
+
+      <a href="/ai-quiz-analytics"
+         class="{% if active=='analytics' %}active{% endif %}">
+        <span class="nav-icon">📊</span> Analytics
+      </a>
+
+    </nav>
+
+    <div class="sidebar-bottom">
+      <a href="/settings"
+         class="{% if active=='settings' %}active{% endif %}">
+        <span class="nav-icon">⚙️</span> Settings
+      </a>
+
+      <a href="/logout" class="logout-link">
+        <span class="nav-icon">🚪</span> Logout
+      </a>
+    </div>
+
+  </aside>
+
+
+  <!-- ══════════════════
+       TOPBAR
+  ══════════════════ -->
+  <header class="topbar" id="topbar">
+
+    <div class="topbar-left">
+
+      <!-- Hamburger — always visible -->
+      <button class="hamburger"
+              id="hamburgerBtn"
+              onclick="toggleSidebar()"
+              aria-label="Toggle sidebar">
+        <span class="bar"></span>
+        <span class="bar"></span>
+        <span class="bar"></span>
+      </button>
+
+      <!-- Brand appears in topbar only when sidebar is hidden -->
+      <a href="/dashboard" class="topbar-brand" id="topbarBrand">
+        <div class="topbar-brand-icon">✦</div>
+        <span class="topbar-brand-name">Learn<span>ify</span></span>
+      </a>
+
+    </div>
+
+
+  </header>
+
+
+  <!-- ══════════════════
+       MAIN
+  ══════════════════ -->
+  <main class="main" id="mainContent">
+    {% block topbar %}{% endblock %}
+    {% block content %}{% endblock %}
+  </main>
+
+</div>
+
+<script>
+  const sidebar     = document.getElementById('sidebar');
+  const topbar      = document.getElementById('topbar');
+  const mainContent = document.getElementById('mainContent');
+  const topbarBrand = document.getElementById('topbarBrand');
+
+  // Read saved state (default = visible, like ChatGPT)
+  let isHidden = localStorage.getItem('sidebar_hidden') === 'true';
+
+  // Apply on page load instantly (no transition flash)
+  function applyState(animate) {
+    if (!animate) {
+      sidebar.style.transition     = 'none';
+      topbar.style.transition      = 'none';
+      mainContent.style.transition = 'none';
+    }
+
+    if (isHidden) {
+      sidebar.classList.add('hidden');
+      topbar.classList.add('sidebar-hidden');
+      mainContent.classList.add('sidebar-hidden');
+      topbarBrand.classList.add('show');
+    } else {
+      sidebar.classList.remove('hidden');
+      topbar.classList.remove('sidebar-hidden');
+      mainContent.classList.remove('sidebar-hidden');
+      topbarBrand.classList.remove('show');
+    }
+
+    // Re-enable transitions after applying
+    if (!animate) {
+      requestAnimationFrame(() => {
+        sidebar.style.transition     = '';
+        topbar.style.transition      = '';
+        mainContent.style.transition = '';
+      });
+    }
+  }
+
+  // Apply saved state immediately without animation
+  applyState(false);
+
+  function toggleSidebar() {
+    isHidden = !isHidden;
+    localStorage.setItem('sidebar_hidden', isHidden);
+    applyState(true);
+  }
+
+  // Escape key hides sidebar
+  document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape' && !isHidden) toggleSidebar();
+  });
+</script>
+<!-- FOOTER -->
+<footer class="footer">
+  <p>© 2025 Learnify · <a href="mailto:support@learnify.com">support@learnify.com</a></p>
+</footer>
+</body>
+</html>

@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>File Quiz | Learnify</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard.css') }}">
+  <style>
+    .footer {
+      background-color: #0f0f1a;
+      text-align: center;
+      padding: 18px 20px;
+      font-family: 'Nunito', sans-serif;
+      font-size: 0.88rem;
+      color: #777;
+    }
+
+    .footer a {
+      color: #aaa;
+      text-decoration: none;
+      margin: 0 2px;
+    }
+
+    .footer a:hover {
+      color: #fff;
+    }
+
+    .question-type-badge {
+      display: inline-block;
+      padding: 4px 10px;
+      border-radius: 12px;
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .badge-mcq {
+      background: #e7f5ff;
+      color: #1971c2;
+      border: 1px solid #a5d8ff;
+    }
+
+    .badge-short {
+      background: #fff3e0;
+      color: #e67700;
+      border: 1px solid #ffe0b2;
+    }
+
+    .badge-long {
+      background: #f3e5f5;
+      color: #7b1fa2;
+      border: 1px solid #e1bee7;
+    }
+
+    .auto-grade-note {
+      background: #e8f5e9;
+      border: 1px solid #a5d6a7;
+      border-radius: 8px;
+      padding: 8px 12px;
+      font-size: 12px;
+      color: #2e7d32;
+      margin-top: 6px;
+    }
+
+    .manual-grade-note {
+      background: #fff3e0;
+      border: 1px solid #ffcc80;
+      border-radius: 8px;
+      padding: 8px 12px;
+      font-size: 12px;
+      color: #e65100;
+      margin-top: 6px;
+    }
+  </style>
+</head>
+
+<body>
+<div class="app">
+  {% include "base.html" %}
+
+  <main class="main">
+    <h2>🧠 Quiz – {{ quiz.file_name }}</h2>
+
+    <form method="POST" action="/submit-file-quiz/{{ quiz.quiz_id }}">
+
+      {% for q in questions %}
+        {% set question_idx = loop.index0 %}
+        
+        <div class="content-box" style="margin-bottom:20px;">
+
+          <p><strong>Q{{ loop.index }}.</strong> {{ q.question }}</p>
+          
+          <div style="display:flex; gap:8px; margin:8px 0;">
+            <span class="muted" style="font-size:13px;">{{ q.marks }} marks</span>
+            
+            {% if q.question_type == "mcq" %}
+              <span class="question-type-badge badge-mcq">MCQ</span>
+            {% elif q.question_type == "short" %}
+              <span class="question-type-badge badge-short">Short Answer</span>
+            {% else %}
+              <span class="question-type-badge badge-long">Long Answer</span>
+            {% endif %}
+          </div>
+
+          {% if q.question_type == "mcq" %}
+            <!-- MCQ Options -->
+            {% set opts = q.options | fromjson %}
+            {% for opt in opts %}
+              <label style="display:block; margin:8px 0;">
+                <input type="radio"
+                       name="q{{ question_idx }}"
+                       value="{{ opt }}"
+                       required>
+                {{ opt }}
+              </label>
+            {% endfor %}
+            <div class="auto-grade-note">
+              ✅ This question will be auto-graded
+            </div>
+
+          {% elif q.question_type == "short" %}
+            <!-- Short Answer -->
+            <textarea
+              name="q{{ question_idx }}"
+              class="input"
+              placeholder="Write a brief answer (2-3 sentences)..."
+              rows="3"
+              required></textarea>
+            
+
+          {% else %}
+            <!-- Long Answer -->
+            <textarea
+              name="q{{ question_idx }}"
+              class="input"
+              placeholder="Write a detailed answer..."
+              rows="6"
+              required></textarea>
+            
+          {% endif %}
+
+        </div>
+      {% endfor %}
+
+      <button class="btn-primary">Submit Quiz</button>
+
+    </form>
+  </main>
+</div>
+
+<footer class="footer">
+  <p>© 2025 Learnify · <a href="mailto:support@learnify.com">support@learnify.com</a></p>
+</footer>
+
+</body>
+</html>

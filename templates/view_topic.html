@@ -1,0 +1,782 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>{{ topic.title }} | Learnify</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard.css') }}">
+  <link href="https://fonts.googleapis.com/css2?family=Sora:wght@600;700;800&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:        #EDE4F0;
+      --primary:   #CBB4D4;
+      --secondary: #A88BC1;
+      --accent:    #8E6FB1;
+      --dark:      #3F2E4D;
+      --white:     #ffffff;
+      --border:    #ddd4e8;
+      --muted:     #9b87a8;
+      --red:       #e17055;
+      --surface:   #f7f2fa;
+      --radius:    16px;
+      --shadow:    0 2px 14px rgba(63,46,77,0.08);
+    }
+
+    body {
+      font-family: 'DM Sans', sans-serif;
+      background: var(--bg);
+      color: var(--dark);
+    }
+
+    h1,h2,h3,h4 { font-family: 'Sora', sans-serif; }
+
+    /* ══════════════════════════════
+       PAGE WRAPPER — sits inside
+       base.html's .main directly
+    ══════════════════════════════ */
+    .topic-page {
+      width: 100%;
+      max-width: 900px;          /* keeps content from stretching too wide */
+    }
+
+    /* ══════════════════════════════
+       TOP BAR
+    ══════════════════════════════ */
+    .topic-topbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 26px;
+      gap: 14px;
+      flex-wrap: wrap;
+    }
+
+    .topbar-left {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      min-width: 0;
+    }
+
+    .back-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 9px 16px;
+      background: var(--white);
+      border: 1.5px solid var(--border);
+      border-radius: 10px;
+      color: var(--accent);
+      font-size: 13.5px;
+      font-weight: 600;
+      text-decoration: none;
+      transition: all 0.2s;
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+
+    .back-btn:hover {
+      background: var(--bg);
+      border-color: var(--secondary);
+    }
+
+    .topic-title h2 {
+      font-size: 21px;
+      font-weight: 800;
+      color: var(--dark);
+      margin: 0 0 3px;
+      text-transform: capitalize;
+    }
+
+    .topic-title p {
+      font-size: 13px;
+      color: var(--muted);
+      margin: 0;
+    }
+
+    .topbar-actions {
+      display: flex;
+      gap: 10px;
+      flex-shrink: 0;
+      align-items: center;
+    }
+
+    /* ── BUTTONS ── */
+    .btn-primary {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      padding: 10px 20px;
+      background: linear-gradient(135deg, var(--accent), var(--secondary));
+      color: var(--white);
+      border-radius: 11px;
+      text-decoration: none;
+      font-size: 13.5px;
+      font-weight: 700;
+      border: none;
+      cursor: pointer;
+      font-family: 'DM Sans', sans-serif;
+      transition: opacity 0.2s, transform 0.2s;
+      box-shadow: 0 4px 14px rgba(142,111,177,0.35);
+    }
+
+    .btn-primary:hover {
+      opacity: 0.9;
+      transform: translateY(-1px);
+    }
+
+    .btn-soft {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      padding: 10px 18px;
+      background: var(--white);
+      color: var(--accent);
+      border: 1.5px solid var(--border);
+      border-radius: 11px;
+      text-decoration: none;
+      font-size: 13.5px;
+      font-weight: 600;
+      cursor: pointer;
+      font-family: 'DM Sans', sans-serif;
+      transition: all 0.2s;
+    }
+
+    .btn-soft:hover {
+      background: var(--bg);
+      border-color: var(--secondary);
+    }
+
+    .upload-form   { display: inline; }
+    .upload-btn    { cursor: pointer; }
+
+    .btn-danger {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 8px 16px;
+      background: #fff0ee;
+      color: var(--red);
+      border: 1.5px solid #ffd0c8;
+      border-radius: 10px;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      font-family: 'DM Sans', sans-serif;
+      transition: all 0.2s;
+    }
+
+    .btn-danger:hover {
+      background: var(--red);
+      color: var(--white);
+      border-color: var(--red);
+    }
+
+    .btn-danger-small {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 32px; height: 32px;
+      background: #fff0ee;
+      color: var(--red);
+      border: 1.5px solid #ffd0c8;
+      border-radius: 8px;
+      font-size: 14px;
+      cursor: pointer;
+      font-family: 'DM Sans', sans-serif;
+      transition: all 0.2s;
+      flex-shrink: 0;
+    }
+
+    .btn-danger-small:hover {
+      background: var(--red);
+      color: var(--white);
+      border-color: var(--red);
+    }
+
+    .btn-link {
+      display: inline-flex;
+      align-items: center;
+      padding: 5px 12px;
+      background: var(--surface);
+      color: var(--accent);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      font-size: 12.5px;
+      font-weight: 600;
+      text-decoration: none;
+      transition: all 0.18s;
+    }
+
+    .btn-link:hover {
+      background: var(--accent);
+      color: var(--white);
+      border-color: var(--accent);
+    }
+
+    /* ══════════════════════════════
+       TABS
+    ══════════════════════════════ */
+    .topic-tabs {
+      display: flex;
+      gap: 5px;
+      margin-bottom: 22px;
+      background: var(--white);
+      padding: 5px;
+      border-radius: 14px;
+      border: 1px solid var(--border);
+      box-shadow: var(--shadow);
+      width: fit-content;
+      flex-wrap: wrap;
+    }
+
+    .tab {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 9px 18px;
+      border-radius: 10px;
+      font-size: 13.5px;
+      font-weight: 600;
+      color: var(--muted);
+      cursor: pointer;
+      border: none;
+      background: transparent;
+      font-family: 'DM Sans', sans-serif;
+      transition: background 0.18s, color 0.18s;
+      white-space: nowrap;
+    }
+
+    .tab:hover {
+      background: var(--bg);
+      color: var(--dark);
+    }
+
+    .tab.active {
+      background: linear-gradient(135deg, var(--accent), var(--secondary));
+      color: var(--white);
+      box-shadow: 0 3px 12px rgba(142,111,177,0.3);
+    }
+
+    /* ══════════════════════════════
+       TAB PANELS
+    ══════════════════════════════ */
+    .tab-content         { display: none; }
+    .tab-content.active  { display: block; }
+
+    /* ══════════════════════════════
+       CONTENT PANEL / CARD
+    ══════════════════════════════ */
+    .content-panel {
+      background: var(--white);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 22px 24px;
+      box-shadow: var(--shadow);
+      margin-bottom: 14px;
+    }
+
+    .content-panel h4 {
+      font-size: 14.5px;
+      font-weight: 700;
+      color: var(--dark);
+      margin: 0 0 14px;
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      padding-bottom: 12px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .section-heading {
+      font-size: 17px;
+      font-weight: 700;
+      color: var(--dark);
+      margin: 0 0 5px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .section-sub {
+      font-size: 13px;
+      color: var(--muted);
+      margin: 0 0 18px;
+      display: block;
+    }
+
+    .content-box {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 16px 18px;
+      font-size: 14px;
+      line-height: 1.7;
+      color: var(--dark);
+      margin-bottom: 14px;
+    }
+
+    .simplified-box {
+      font-size: 14px;
+      line-height: 1.75;
+      color: var(--dark);
+    }
+
+    /* ══════════════════════════════
+       FILE ROWS
+    ══════════════════════════════ */
+    .file-list {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .file-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px 16px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      gap: 12px;
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+
+    .file-row:hover {
+      border-color: var(--secondary);
+      box-shadow: 0 3px 12px rgba(142,111,177,0.1);
+    }
+
+    .file-row-left {
+      display: flex;
+      align-items: center;
+      gap: 11px;
+      min-width: 0;
+    }
+
+    .file-icon {
+      width: 36px; height: 36px;
+      background: linear-gradient(135deg, #ede0f5, #ddd0ea);
+      border-radius: 9px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 17px;
+      flex-shrink: 0;
+      border: 1px solid var(--border);
+    }
+
+    .file-link {
+      font-size: 13.5px;
+      font-weight: 600;
+      color: var(--accent);
+      text-decoration: none;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .file-link:hover { text-decoration: underline; }
+
+    /* ══════════════════════════════
+       QUIZ ROWS
+    ══════════════════════════════ */
+    .quiz-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 11px 0;
+      border-bottom: 1px solid var(--border);
+      gap: 12px;
+    }
+
+    .quiz-row:last-child { border-bottom: none; }
+
+    .quiz-row-label {
+      font-size: 13.5px;
+      font-weight: 500;
+      color: var(--dark);
+    }
+
+    .quiz-row-actions {
+      display: flex;
+      gap: 7px;
+      align-items: center;
+      flex-shrink: 0;
+    }
+
+    /* ══════════════════════════════
+       GAME CARDS
+    ══════════════════════════════ */
+    .game-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 12px;
+      margin-top: 14px;
+    }
+
+    .game-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 13px;
+      padding: 20px 14px;
+      text-align: center;
+      text-decoration: none;
+      transition: all 0.2s;
+    }
+
+    .game-card:hover {
+      border-color: var(--secondary);
+      background: #ede0f5;
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(142,111,177,0.15);
+    }
+
+    .game-card .g-icon {
+      font-size: 30px;
+      display: block;
+      margin-bottom: 10px;
+    }
+
+    .game-card .g-name {
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--dark);
+    }
+
+    .game-card .g-desc {
+      font-size: 11.5px;
+      color: var(--muted);
+      margin-top: 4px;
+    }
+
+    /* ══════════════════════════════
+       EMPTY STATE
+    ══════════════════════════════ */
+    .empty-state {
+      text-align: center;
+      padding: 36px 20px;
+      color: var(--muted);
+      font-size: 14px;
+    }
+
+    .empty-state .e-icon {
+      font-size: 38px;
+      display: block;
+      margin-bottom: 10px;
+    }
+
+    .muted { color: var(--muted); font-size: 13.5px; }
+    hr { border: none; border-top: 1px solid var(--border); margin: 14px 0; }
+
+    @media (max-width: 640px) {
+      .topic-topbar  { flex-direction: column; align-items: flex-start; }
+      .topic-tabs    { overflow-x: auto; width: 100%; }
+      .game-grid     { grid-template-columns: 1fr; }
+      .topbar-actions { width: 100%; }
+    }
+  </style>
+</head>
+
+<body>
+{% extends "base.html" %}
+{% block content %}
+
+<div class="topic-page">
+
+  <!-- ══════════════════════════════
+       TOP BAR
+  ══════════════════════════════ -->
+  <header class="topic-topbar">
+    <div class="topbar-left">
+      <a href="/my-topics" class="back-btn">← Back</a>
+      <div class="topic-title">
+        <h2>📘 {{ topic.title }}</h2>
+        <p>Everything you need to master this topic</p>
+      </div>
+    </div>
+
+    <div class="topbar-actions">
+      <a href="/ai-quiz/{{ topic.id }}" class="btn-primary">
+        🧠 Start Quiz
+      </a>
+      <form method="POST"
+            action="/upload-topic-file/{{ topic.id }}"
+            enctype="multipart/form-data"
+            class="upload-form">
+        <label class="btn-soft upload-btn">
+          ➕ Add File
+          <input type="file" name="file" hidden onchange="this.form.submit()">
+        </label>
+      </form>
+    </div>
+  </header>
+
+
+  <!-- ══════════════════════════════
+       TABS
+  ══════════════════════════════ -->
+  <div class="topic-tabs">
+    <button class="tab active" onclick="openTab('content',    this)">📘 Content</button>
+    <button class="tab"        onclick="openTab('simplified', this)">✨ Simplified</button>
+    <button class="tab"        onclick="openTab('quiz',       this)">🧠 Quiz</button>
+    <button class="tab"        onclick="openTab('games',      this)">🎮 Games</button>
+    <button class="tab"        onclick="openTab('video',      this)">🎥 Video</button>
+  </div>
+
+
+  <!-- ══════════════════════════════
+       TAB: CONTENT
+  ══════════════════════════════ -->
+  <section id="content" class="tab-content active">
+
+    <div class="content-panel">
+      <h3 class="section-heading">📘 Topic Content</h3>
+      <span class="section-sub">Written content for this topic</span>
+
+      {% if content %}
+        <div class="content-box">{{ content }}</div>
+        <form method="POST" action="/delete-topic-content/{{ topic.id }}">
+          <button class="btn-danger" type="submit">🗑 Delete Text</button>
+        </form>
+      {% else %}
+        <p class="muted">No written content added yet.</p>
+      {% endif %}
+    </div>
+
+    <div class="content-panel">
+      <h3 class="section-heading">📎 Attached Files</h3>
+      <span class="section-sub">Files uploaded to this topic</span>
+
+      {% if files and files|length > 0 %}
+        <div class="file-list">
+          {% for f in files %}
+            <div class="file-row">
+              <div class="file-row-left">
+                <div class="file-icon">📄</div>
+                <a href="{{ url_for('static', filename='uploads/' ~ f.file_name) }}"
+                   class="file-link" target="_blank">
+                  {{ f.file_name }}
+                </a>
+              </div>
+              <form method="POST" action="/delete-topic-file/{{ f.id }}">
+                <button class="btn-danger-small" type="submit">🗑</button>
+              </form>
+            </div>
+          {% endfor %}
+        </div>
+      {% else %}
+        <div class="empty-state">
+    <span class="e-icon">📎</span>
+    No files uploaded yet. Click 
+
+    <form method="POST"
+          action="/upload-topic-file/{{ topic.id }}"
+          enctype="multipart/form-data"
+          class="upload-form"
+          style="display:inline;">
+
+        <label class="btn-soft upload-btn" style="cursor:pointer;">
+            <strong>Add File</strong>
+            <input type="file" name="file" hidden onchange="this.form.submit()">
+        </label>
+
+    </form>
+
+    to get started.
+</div>
+
+      {% endif %}
+    </div>
+
+  </section>
+
+
+  <!-- ══════════════════════════════
+       TAB: SIMPLIFIED
+  ══════════════════════════════ -->
+  <section id="simplified" class="tab-content">
+
+    <div class="content-panel" style="margin-bottom:14px;">
+      <h3 class="section-heading">✨ File-wise Simplified Explanation</h3>
+      <span class="section-sub">AI-simplified content per uploaded file</span>
+    </div>
+
+    {% if files and files|length > 0 %}
+      {% for f in files %}
+        <div class="content-panel">
+          <h4>📄 {{ f.file_name }}</h4>
+
+          {% if f.simplified_text %}
+            <div class="simplified-box">{{ f.simplified_text | safe }}</div>
+            <div style="display:flex; gap:10px; margin-top:16px; flex-wrap:wrap;">
+              <a href="/simplify-file/{{ f.id }}" class="btn-soft">🔄 Re-Simplify</a>
+              <form method="POST" action="/delete-file-simplified/{{ f.id }}">
+                <button class="btn-danger" type="submit">🗑 Delete</button>
+              </form>
+            </div>
+          {% else %}
+            <div class="empty-state" style="padding:20px 10px;">
+              <span class="e-icon">✨</span>
+              No simplified explanation yet.
+            </div>
+            <a href="/simplify-file/{{ f.id }}" class="btn-soft">✨ Simplify this file</a>
+          {% endif %}
+        </div>
+      {% endfor %}
+    {% else %}
+      <div class="content-panel">
+        <div class="empty-state">
+          <span class="e-icon">📂</span>
+          Upload a file to generate simplified explanations.
+        </div>
+      </div>
+    {% endif %}
+
+  </section>
+
+
+  <!-- ══════════════════════════════
+       TAB: QUIZ
+  ══════════════════════════════ -->
+  <section id="quiz" class="tab-content">
+
+    <div class="content-panel" style="margin-bottom:14px;">
+      <h3 class="section-heading">🧠 File-based Quizzes</h3>
+      <span class="section-sub">Generate and attempt quizzes per file</span>
+    </div>
+
+    {% for f in files %}
+      <div class="content-panel">
+        <h4>📄 {{ f.file_name }}</h4>
+
+        <a href="/generate-file-quiz/{{ f.id }}" class="btn-soft"
+           style="margin-bottom:14px; display:inline-flex;">
+          🤖 Generate New Quiz
+        </a>
+
+        <hr>
+
+        {% if f.quizzes %}
+          {% for q in f.quizzes %}
+            <div class="quiz-row">
+              <span class="quiz-row-label">
+                📝 Quiz {{ loop.index }}
+                <span class="muted" style="font-weight:400; margin-left:6px;">
+                  {{ q.created_at.strftime('%d %b %Y') }}
+                </span>
+              </span>
+              <div class="quiz-row-actions">
+                <a href="/file-quiz/{{ q.quiz_id }}"              class="btn-link">▶ Start</a>
+                <a href="/view-file-quiz-answers/{{ q.quiz_id }}" class="btn-link">📋 Answers</a>
+                <form action="/delete-file-quiz/{{ q.quiz_id }}" method="POST" style="display:inline;">
+    <button type="submit" onclick="return confirm('Delete this quiz?')">🗑️ Delete</button>
+</form>
+              </div>
+            </div>
+          {% endfor %}
+        {% else %}
+          <div class="empty-state" style="padding:20px 10px;">
+            <span class="e-icon">📝</span>
+            No quizzes generated yet.
+          </div>
+        {% endif %}
+      </div>
+    {% endfor %}
+
+  </section>
+
+
+  <!-- ══════════════════════════════
+       TAB: GAMES
+  ══════════════════════════════ -->
+  <section id="games" class="tab-content">
+
+    <div class="content-panel" style="margin-bottom:14px;">
+      <h3 class="section-heading">🎮 Flashcard Games</h3>
+      <span class="section-sub">Auto-generated from your simplified file content</span>
+    </div>
+
+    {% if files and files|length > 0 %}
+      {% for file in files %}
+        <div class="content-panel">
+          <h4>📄 {{ file.file_name }}</h4>
+
+          {% if file.simplified_text %}
+            <p class="muted" style="margin-bottom:14px;">
+              Flashcards will be auto-generated when you start a game.
+            </p>
+
+            <div class="game-grid">
+              <a href="{{ url_for('flashcard.flip_answer_game_file', file_id=file.id) }}"
+                 class="game-card">
+                <span class="g-icon">🔄</span>
+                <div class="g-name">Flip & Answer</div>
+                <div class="g-desc">Self-paced review</div>
+              </a>
+
+              <a href="{{ url_for('flashcard.timed_challenge_file', file_id=file.id) }}"
+                 class="game-card">
+                <span class="g-icon">⚡</span>
+                <div class="g-name">Timed Challenge</div>
+                <div class="g-desc">Beat the clock</div>
+              </a>
+
+              <a href="{{ url_for('flashcard.match_game_file', file_id=file.id) }}"
+                 class="game-card">
+                <span class="g-icon">🧩</span>
+                <div class="g-name">Match Game</div>
+                <div class="g-desc">Match terms & meanings</div>
+              </a>
+            </div>
+
+          {% else %}
+            <div class="empty-state" style="padding:20px 10px;">
+              <span class="e-icon">⚠️</span>
+              Simplify this file first to enable games.
+            </div>
+            <a href="/simplify-file/{{ file.id }}" class="btn-soft">✨ Simplify File</a>
+          {% endif %}
+        </div>
+      {% endfor %}
+
+    {% else %}
+      <div class="content-panel">
+        <div class="empty-state">
+          <span class="e-icon">🎮</span>
+          Upload files to start playing flashcard games.
+        </div>
+      </div>
+    {% endif %}
+
+  </section>
+
+
+  <!-- ══════════════════════════════
+       TAB: VIDEO
+  ══════════════════════════════ -->
+  <section id="video" class="tab-content">
+    <div class="content-panel">
+      <h3 class="section-heading">🎥 Animation / Video</h3>
+      <div class="empty-state">
+        <span class="e-icon">🎬</span>
+        No video linked yet.
+      </div>
+    </div>
+  </section>
+
+</div><!-- end .topic-page -->
+
+<script>
+  function openTab(tabId, btn) {
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+    document.getElementById(tabId).classList.add('active');
+    btn.classList.add('active');
+  }
+</script>
+
+{% endblock %}
+</body>
+</html>

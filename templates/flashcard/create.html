@@ -1,0 +1,130 @@
+{% extends "base.html" %}
+
+{% block title %}Create Flashcards{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-md-8 mx-auto">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <div>
+                    <h2>📝 Create Flashcards</h2>
+                </div>
+                <a href="{{ url_for('dashboard') }}" class="btn btn-outline-secondary">Back</a>
+            </div>
+
+            <div class="card shadow">
+                <div class="card-body">
+                    <form id="flashcard-form">
+                        <div class="mb-3">
+                            <label for="topic" class="form-label">Topic / Subject *</label>
+                            <input type="text" class="form-control" id="topic" name="topic" 
+                                   placeholder="e.g., Python Programming" required>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="question" class="form-label">Question *</label>
+                            <textarea class="form-control" id="question" name="question" rows="3" 
+                                      placeholder="What is a function?" required></textarea>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="answer" class="form-label">Answer *</label>
+                            <textarea class="form-control" id="answer" name="answer" rows="4" 
+                                      placeholder="A function is..." required></textarea>
+                        </div>
+
+                        <div class="mb-4">
+                            <label for="difficulty" class="form-label">Difficulty</label>
+                            <select class="form-select" id="difficulty" name="difficulty">
+                                <option value="easy">Easy</option>
+                                <option value="medium" selected>Medium</option>
+                                <option value="hard">Hard</option>
+                            </select>
+                        </div>
+
+                        <button type="submit" class="btn btn-primary w-100">Add Flashcard</button>
+                    </form>
+                </div>
+            </div>
+
+            <div class="card mt-4">
+                <div class="card-header bg-light">
+                    <h5 class="mb-0">⚡ Bulk Add</h5>
+                </div>
+                <div class="card-body">
+                    <textarea class="form-control mb-3" id="bulk-input" rows="6" 
+                              placeholder="Format: Question | Answer
+What is HTML? | HyperText Markup Language"></textarea>
+                    <input type="text" class="form-control mb-3" id="bulk-topic" placeholder="Topic">
+                    <button class="btn btn-success" onclick="bulkAdd()">Bulk Add</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.getElementById('flashcard-form').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    const formData = new FormData(this);
+    
+    try {
+        const response = await fetch('/flashcard/create', {
+            method: 'POST',
+            body: formData
+        });
+        const result = await response.json();
+        
+        if (result.success) {
+            alert('Flashcard created! ✅');
+            this.reset();
+        }
+    } catch (error) {
+        alert('Error creating flashcard');
+    }
+});
+
+async function bulkAdd() {
+    const input = document.getElementById('bulk-input').value.trim();
+    const topic = document.getElementById('bulk-topic').value.trim();
+    
+    if (!input || !topic) {
+        alert('Please provide both topic and content');
+        return;
+    }
+    
+    const lines = input.split('\n').filter(line => line.trim());
+    const flashcards = [];
+    
+    for (const line of lines) {
+        const parts = line.split('|').map(p => p.trim());
+        if (parts.length === 2) {
+            flashcards.push({
+                topic: topic,
+                question: parts[0],
+                answer: parts[1],
+                difficulty: 'medium'
+            });
+        }
+    }
+    
+    try {
+        const response = await fetch('/flashcard/bulk-create', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({ flashcards: flashcards })
+        });
+        const result = await response.json();
+        
+        if (result.success) {
+            alert(`${result.count} flashcards created! ✅`);
+            document.getElementById('bulk-input').value = '';
+            document.getElementById('bulk-topic').value = '';
+        }
+    } catch (error) {
+        alert('Error creating flashcards');
+    }
+}
+</script>
+{% endblock %}

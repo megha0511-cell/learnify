@@ -1,0 +1,231 @@
+{% extends "base.html" %}
+
+{% block topbar %}{% endblock %}
+
+{% block content %}
+
+<style>
+  /* ── PAGE HEADER ── */
+  .page-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 28px;
+  }
+
+  .page-header h2 {
+    font-size: 24px;
+    font-weight: 800;
+    color: #1e1b3a;
+    margin: 0;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .btn-primary {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    padding: 11px 22px;
+    background: linear-gradient(135deg, #6c5ce7, #a29bfe);
+    color: #fff;
+    border-radius: 12px;
+    text-decoration: none;
+    font-size: 14px;
+    font-weight: 600;
+    border: none;
+    cursor: pointer;
+    transition: opacity 0.2s, transform 0.2s;
+    box-shadow: 0 4px 16px rgba(108,92,231,0.35);
+  }
+
+  .btn-primary:hover {
+    opacity: 0.92;
+    transform: translateY(-1px);
+  }
+
+  /* ── TOPICS LIST ── */
+  .topics-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
+
+  /* ── TOPIC CARD ── */
+  .topic-card {
+    background: #ffffff;
+    border: 1px solid #ece9ff;
+    border-radius: 18px;
+    padding: 20px 24px;
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    transition: box-shadow 0.22s, transform 0.22s, border-color 0.22s;
+    box-shadow: 0 2px 14px rgba(108,92,231,0.06);
+  }
+
+  .topic-card:hover {
+    box-shadow: 0 10px 32px rgba(108,92,231,0.13);
+    transform: translateY(-2px);
+    border-color: #b9b0ff;
+  }
+
+  /* ── ICON BLOCK ── */
+  .topic-icon-wrap {
+    width: 56px;
+    height: 56px;
+    border-radius: 15px;
+    background: linear-gradient(135deg, #ede9ff, #dcd5ff);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 26px;
+    flex-shrink: 0;
+    border: 1px solid #e0d9ff;
+  }
+
+  /* ── TEXT BLOCK ── */
+  .topic-body {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .topic-body h3 {
+    font-size: 16px;
+    font-weight: 700;
+    color: #1e1b3a;
+    margin: 0 0 4px;
+    text-transform: capitalize;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .topic-body p {
+    font-size: 13px;
+    color: #8b87a8;
+    margin: 0 0 12px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  /* ── META CHIPS ── */
+  .topic-meta {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+
+  .meta-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 600;
+    background: #f4f3ff;
+    border: 1px solid #ece9ff;
+    color: #6c5ce7;
+  }
+
+  /* ── OPEN BUTTON ── */
+  .btn-open {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 10px 20px;
+    background: transparent;
+    border: 1.5px solid #6c5ce7;
+    color: #6c5ce7;
+    border-radius: 11px;
+    text-decoration: none;
+    font-size: 13.5px;
+    font-weight: 700;
+    transition: all 0.2s;
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+
+  .btn-open:hover {
+    background: #6c5ce7;
+    color: #fff;
+    box-shadow: 0 4px 14px rgba(108,92,231,0.3);
+    transform: translateX(2px);
+  }
+
+  /* ── EMPTY STATE ── */
+  .empty-state {
+    text-align: center;
+    padding: 80px 30px;
+    background: #fff;
+    border: 1.5px dashed #c5beff;
+    border-radius: 22px;
+  }
+
+  .empty-state .empty-icon {
+    font-size: 52px;
+    margin-bottom: 16px;
+    display: block;
+  }
+
+  .empty-state h3 {
+    font-size: 20px;
+    font-weight: 700;
+    color: #1e1b3a;
+    margin: 0 0 8px;
+  }
+
+  .empty-state p {
+    font-size: 14px;
+    color: #8b87a8;
+    margin: 0 0 24px;
+  }
+
+  @media (max-width: 560px) {
+    .topic-card    { flex-wrap: wrap; }
+    .btn-open      { width: 100%; justify-content: center; }
+  }
+</style>
+
+<div class="page-header">
+  <h2>📘 My Topics</h2>
+  <a href="/add-topic" class="btn-primary">➕ Add Topic</a>
+</div>
+
+<section class="topics-section">
+  {% if topics %}
+  <div class="topics-grid">
+    {% for t in topics %}
+    <div class="topic-card">
+
+      <div class="topic-icon-wrap">📚</div>
+
+      <div class="topic-body">
+        <h3>{{ t.title }}</h3>
+        <p>{{ t.description or "No description provided" }}</p>
+        <div class="topic-meta">
+          <span class="meta-chip">📝 {{ t.quiz_count or 0 }} quizzes</span>
+          <span class="meta-chip">📊 {{ t.progress or 0 }}% progress</span>
+        </div>
+      </div>
+
+      <a href="/topic/{{ t.id }}" class="btn-open">Open →</a>
+
+    </div>
+    {% endfor %}
+  </div>
+
+  {% else %}
+  <div class="empty-state">
+    <span class="empty-icon">📭</span>
+    <h3>No topics yet</h3>
+    <p>Start by adding your first topic</p>
+    <a href="/add-topic" class="btn-primary">➕ Add Topic</a>
+  </div>
+  {% endif %}
+</section>
+
+{% endblock %}

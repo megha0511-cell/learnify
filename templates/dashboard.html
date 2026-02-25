@@ -1,0 +1,714 @@
+{% extends "base.html" %}
+{% block content %}
+
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Sora:wght@400;500;600;700&family=DM+Sans:wght@400;500&display=swap');
+
+  * { font-family: 'DM Sans', sans-serif; box-sizing: border-box; }
+
+  h1, h2, h3, h4 { font-family: 'Sora', sans-serif; }
+
+  /* ── ROOT TOKENS ── */
+  :root {
+    --bg:        #f4f3ff;
+    --surface:   #ffffff;
+    --border:    #ece9ff;
+    --purple:    #6c5ce7;
+    --purple-lt: #a29bfe;
+    --green:     #00b894;
+    --orange:    #fd9644;
+    --red:       #e17055;
+    --text:      #1e1b3a;
+    --muted:     #8b87a8;
+    --radius:    16px;
+    --shadow:    0 4px 24px rgba(108,92,231,0.08);
+  }
+
+  body { background: var(--bg); color: var(--text); }
+
+  /* ── LAYOUT ── */
+  .dash { max-width: 1100px; margin: 0 auto; padding: 32px 20px 60px; }
+
+  /* ── WELCOME BANNER ── */
+  .welcome-banner {
+    background: linear-gradient(120deg, #6c5ce7 0%, #a29bfe 60%, #fd79a8 100%);
+    border-radius: 22px;
+    padding: 30px 36px;
+    color: #fff;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 28px;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .welcome-banner::before {
+    content: '';
+    position: absolute;
+    width: 260px; height: 260px;
+    background: rgba(255,255,255,0.07);
+    border-radius: 50%;
+    top: -80px; right: -60px;
+  }
+
+  .welcome-banner::after {
+    content: '';
+    position: absolute;
+    width: 140px; height: 140px;
+    background: rgba(255,255,255,0.07);
+    border-radius: 50%;
+    bottom: -50px; right: 120px;
+  }
+
+  .welcome-banner h1 { font-size: 26px; margin: 0 0 6px; }
+  .welcome-banner p  { margin: 0; opacity: 0.88; font-size: 14px; }
+
+  .welcome-banner .streak-pill {
+    background: rgba(255,255,255,0.2);
+    border: 1px solid rgba(255,255,255,0.3);
+    border-radius: 30px;
+    padding: 10px 20px;
+    text-align: center;
+    backdrop-filter: blur(4px);
+    z-index: 1;
+  }
+
+  .welcome-banner .streak-pill span {
+    font-size: 28px;
+    font-weight: 700;
+    display: block;
+  }
+
+  .welcome-banner .streak-pill label {
+    font-size: 12px;
+    opacity: 0.85;
+  }
+
+  /* ── KPI ROW ── */
+  .kpi-row {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 14px;
+    margin-bottom: 28px;
+  }
+
+  .kpi-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 18px 20px;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    box-shadow: var(--shadow);
+  }
+
+  .kpi-icon {
+    width: 44px; height: 44px;
+    border-radius: 12px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 20px;
+    flex-shrink: 0;
+  }
+
+  .kpi-icon.purple { background: #ede9ff; }
+  .kpi-icon.green  { background: #e0faf4; }
+  .kpi-icon.orange { background: #fff3e0; }
+  .kpi-icon.red    { background: #ffe8e4; }
+
+  .kpi-card .val   { font-size: 22px; font-weight: 700; line-height: 1; }
+  .kpi-card .lbl   { font-size: 12px; color: var(--muted); margin-top: 3px; }
+
+  /* ── TWO COLUMN ROW ── */
+  .row-2 {
+    display: grid;
+    grid-template-columns: 1.6fr 1fr;
+    gap: 20px;
+    margin-bottom: 20px;
+  }
+
+  /* ── CARD ── */
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 22px 24px;
+    box-shadow: var(--shadow);
+  }
+
+  .card h3 {
+    font-size: 15px;
+    margin: 0 0 16px;
+    display: flex;
+    align-items: center;
+    gap: 7px;
+  }
+
+  /* ── ACTIVITY HEATMAP ── */
+  .heatmap-grid {
+    display: grid;
+    grid-template-columns: repeat(14, 1fr);
+    gap: 5px;
+  }
+
+  .hm-day {
+    aspect-ratio: 1;
+    border-radius: 4px;
+    background: #ece9ff;
+    cursor: default;
+    transition: transform 0.15s;
+    position: relative;
+  }
+
+  .hm-day:hover { transform: scale(1.4); z-index: 10; }
+
+  .hm-day.l0 { background: #ece9ff; }
+  .hm-day.l1 { background: #c7bfff; }
+  .hm-day.l2 { background: #a29bfe; }
+  .hm-day.l3 { background: #6c5ce7; }
+  .hm-day.l4 { background: #4a3ab5; }
+
+  .heatmap-legend {
+    display: flex; align-items: center; gap: 5px;
+    margin-top: 10px; justify-content: flex-end;
+    font-size: 11px; color: var(--muted);
+  }
+
+  .heatmap-legend span {
+    width: 11px; height: 11px;
+    border-radius: 3px; display: inline-block;
+  }
+
+  /* ── BADGES ── */
+  .badge-scroll {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+
+  .badge-pill {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 14px;
+    border-radius: 30px;
+    font-size: 13px;
+    font-weight: 500;
+    border: 1.5px solid;
+    transition: transform 0.2s;
+  }
+
+  .badge-pill:hover { transform: translateY(-2px); }
+
+  .badge-pill.earned {
+    background: #fdf6ff;
+    border-color: #c77dff;
+    color: #6d28d9;
+  }
+
+  .badge-pill.locked {
+    background: #f5f5f5;
+    border-color: #ddd;
+    color: #aaa;
+    filter: grayscale(1);
+  }
+
+  .badge-pill .b-icon { font-size: 18px; }
+
+  /* ── WEEKLY CALENDAR ── */
+  .week-row {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 8px;
+  }
+
+  .week-day {
+    text-align: center;
+    padding: 12px 6px;
+    border-radius: 12px;
+    border: 1.5px solid var(--border);
+    font-size: 13px;
+  }
+
+  .week-day .day-name { color: var(--muted); font-size: 11px; }
+  .week-day .day-num  { font-weight: 700; font-size: 17px; margin: 4px 0; }
+  .week-day .day-dot  {
+    width: 7px; height: 7px;
+    border-radius: 50%;
+    margin: 0 auto;
+    background: #ddd;
+  }
+
+  .week-day.active {
+    background: linear-gradient(135deg, #6c5ce7, #a29bfe);
+    border-color: transparent;
+    color: #fff;
+  }
+
+  .week-day.active .day-name { color: rgba(255,255,255,0.7); }
+  .week-day.active .day-dot  { background: rgba(255,255,255,0.6); }
+
+  .week-day.today {
+    border-color: var(--purple);
+    background: #f0eeff;
+  }
+
+  /* ── INSIGHTS ── */
+  .insight-list { display: flex; flex-direction: column; gap: 10px; }
+
+  .insight-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 12px 14px;
+    border-radius: 12px;
+    font-size: 13.5px;
+    line-height: 1.5;
+  }
+
+  .insight-item.warn   { background: #fff7ed; border-left: 3px solid var(--orange); }
+  .insight-item.good   { background: #e8faf4; border-left: 3px solid var(--green); }
+  .insight-item.info   { background: #f0eeff; border-left: 3px solid var(--purple); }
+  .insight-item .i-ico { font-size: 18px; flex-shrink: 0; margin-top: 1px; }
+
+  /* ── TOPIC MASTERY ── */
+  .topic-row {
+    margin-bottom: 13px;
+  }
+
+  .topic-row .t-header {
+    display: flex;
+    justify-content: space-between;
+    font-size: 13px;
+    margin-bottom: 5px;
+  }
+
+  .topic-row .t-bar {
+    height: 7px;
+    background: #ece9ff;
+    border-radius: 6px;
+    overflow: hidden;
+  }
+
+  .topic-row .t-fill {
+    height: 100%;
+    border-radius: 6px;
+    background: linear-gradient(90deg, #6c5ce7, #a29bfe);
+    transition: width 0.8s ease;
+  }
+
+  .topic-row .t-fill.low  { background: linear-gradient(90deg, #e17055, #fd9644); }
+  .topic-row .t-fill.mid  { background: linear-gradient(90deg, #fd9644, #ffd32a); }
+  .topic-row .t-fill.high { background: linear-gradient(90deg, #6c5ce7, #a29bfe); }
+
+  /* ── RECENT SESSIONS ── */
+  .session-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 11px 0;
+    border-bottom: 1px solid #f5f3ff;
+    font-size: 13.5px;
+  }
+
+  .session-row:last-child { border-bottom: none; }
+
+  .mode-tag {
+    display: inline-block;
+    padding: 3px 10px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 600;
+  }
+
+  .mode-tag.flip   { background: #e7f5ff; color: #1971c2; }
+  .mode-tag.timed  { background: #fff3bf; color: #e67700; }
+  .mode-tag.match  { background: #ebfbee; color: #2f9e44; }
+
+  /* ── SCORE RING (mini) ── */
+  .score-ring {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    font-weight: 600;
+    color: var(--purple);
+    font-size: 14px;
+  }
+
+  /* ── FULL WIDTH ── */
+  .row-full { margin-bottom: 20px; }
+
+  /* ── EMPTY STATE ── */
+  .empty-state {
+    text-align: center;
+    padding: 30px 20px;
+    color: var(--muted);
+    font-size: 14px;
+  }
+
+  .empty-state .e-ico { font-size: 36px; margin-bottom: 8px; display: block; }
+
+  /* ── TREND CHART ── */
+  #trendChart { max-height: 180px; }
+
+  /* ── STUDY TIP ── */
+  .tip-card {
+    background: linear-gradient(120deg, #6c5ce7, #a29bfe);
+    border-radius: var(--radius);
+    padding: 18px 22px;
+    color: #fff;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    margin-bottom: 20px;
+  }
+
+  .tip-card .tip-ico { font-size: 32px; flex-shrink: 0; }
+  .tip-card h4       { margin: 0 0 4px; font-size: 14px; opacity: 0.85; }
+  .tip-card p        { margin: 0; font-size: 15px; font-weight: 600; }
+
+  /* ── RESPONSIVE ── */
+  @media (max-width: 768px) {
+    .kpi-row  { grid-template-columns: repeat(2, 1fr); }
+    .row-2    { grid-template-columns: 1fr; }
+    .week-row { grid-template-columns: repeat(7, 1fr); gap: 4px; }
+    .week-day { padding: 8px 2px; }
+  }
+</style>
+
+<div class="dash">
+
+  <!-- ═══════════════════════════════════════
+       1. WELCOME BANNER
+  ═══════════════════════════════════════ -->
+  <div class="welcome-banner">
+    <div>
+      {% if is_new_user %}
+        <h1>Welcome to Learnify! 🎉</h1>
+        <p>Your learning journey starts here. Upload a file and start playing games!</p>
+      {% else %}
+        <h1>Welcome back, {{ name }} 👋</h1>
+        <p>{{ motivation_message }}</p>
+      {% endif %}
+    </div>
+
+    <div class="streak-pill">
+      <span>🔥 {{ active_days }}</span>
+      <label>Day Streak</label>
+    </div>
+  </div>
+
+
+  <!-- ═══════════════════════════════════════
+       2. KPI STRIP
+  ═══════════════════════════════════════ -->
+  <div class="kpi-row">
+    <div class="kpi-card">
+      <div class="kpi-icon purple">🎮</div>
+      <div>
+        <div class="val">{{ games_played }}</div>
+        <div class="lbl">Games Played</div>
+      </div>
+    </div>
+
+    <div class="kpi-card">
+      <div class="kpi-icon green">🎯</div>
+      <div>
+        <div class="val">{{ avg_accuracy }}%</div>
+        <div class="lbl">Avg Accuracy</div>
+      </div>
+    </div>
+
+    
+
+    <div class="kpi-card">
+      <div class="kpi-icon red">🏆</div>
+      <div>
+        <div class="val">{{ earned_badge_ids | length }}</div>
+        <div class="lbl">Badges Earned</div>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- ═══════════════════════════════════════
+       3. ACTIVITY HEATMAP  +  BADGES
+  ═══════════════════════════════════════ -->
+  <div class="row-2">
+
+    <!-- Heatmap -->
+    <div class="card">
+      <h3>📊 Learning Activity</h3>
+      <div class="heatmap-grid">
+        {% for day in calendar %}
+          <div class="hm-day l{{ day.level }}" title="{{ day.date }} — {{ day.count }} sessions"></div>
+        {% endfor %}
+      </div>
+      <div class="heatmap-legend">
+        Less
+        <span style="background:#ece9ff"></span>
+        <span style="background:#c7bfff"></span>
+        <span style="background:#a29bfe"></span>
+        <span style="background:#6c5ce7"></span>
+        <span style="background:#4a3ab5"></span>
+        More
+      </div>
+    </div>
+
+    <!-- Badges -->
+    <div class="card">
+      <h3>🏅 Badges
+        <a href="{{ url_for('flashcard.view_badges') }}"
+           style="font-size:12px; color:var(--purple); margin-left:auto; font-weight:500;">
+          View All →
+        </a>
+      </h3>
+
+      <div class="badge-scroll">
+        {% for badge in badges %}
+          <div class="badge-pill {% if badge.name in earned_badge_keys %}earned{% else %}locked{% endif %}">
+            <span class="b-icon">{{ badge.icon }}</span>
+            <span>{{ badge.name }}</span>
+          </div>
+        {% else %}
+          <p style="color:var(--muted); font-size:13px;">No badges yet. Start playing!</p>
+        {% endfor %}
+      </div>
+    </div>
+
+  </div>
+
+
+  <!-- ═══════════════════════════════════════
+       4. WEEKLY CALENDAR
+  ═══════════════════════════════════════ -->
+  <div class="card row-full">
+    <h3>📅 This Week</h3>
+    <div class="week-row">
+      {% for day in weekly_activity %}
+        <div class="week-day
+          {% if day.active %}active{% endif %}
+          {% if loop.index0 == today_weekday %}today{% endif %}">
+          <div class="day-name">{{ day.label }}</div>
+          <div class="day-num">{{ day.count }}</div>
+          <div class="day-dot"></div>
+        </div>
+      {% endfor %}
+    </div>
+  </div>
+
+
+  <!-- ═══════════════════════════════════════
+       5. TOPIC MASTERY  +  INSIGHTS
+  ═══════════════════════════════════════ -->
+  <div class="row-2">
+
+    <!-- Topic Mastery -->
+    <div class="card">
+      <h3>🎯 Topic Mastery</h3>
+
+      {% if topic_progress %}
+        {% for t in topic_progress %}
+          <div class="topic-row">
+            <div class="t-header">
+              <span>{{ t.name }}</span>
+              <span style="font-weight:600;">{{ t.progress | int }}%</span>
+            </div>
+            <div class="t-bar">
+              <div class="t-fill
+                {% if t.progress < 40 %}low
+                {% elif t.progress < 70 %}mid
+                {% else %}high{% endif %}"
+                style="width: {{ t.progress }}%">
+              </div>
+            </div>
+          </div>
+        {% endfor %}
+      {% else %}
+        <div class="empty-state">
+          <span class="e-ico">📂</span>
+          Play games to see your topic mastery!
+        </div>
+      {% endif %}
+    </div>
+
+    <!-- Insights -->
+    <div class="card">
+      <h3>🧠 Smart Insights</h3>
+
+      <div class="insight-list">
+
+        {% if insights.weak_subject != "Not enough data" %}
+          <div class="insight-item warn">
+            <span class="i-ico">⚠️</span>
+            <div>
+              <strong>Needs Attention</strong><br>
+              {{ insights.suggestion }}
+            </div>
+          </div>
+        {% endif %}
+
+        {% if insights.strong_subject != "Keep learning!" %}
+          <div class="insight-item good">
+            <span class="i-ico">✅</span>
+            <div>
+              <strong>Strongest Area</strong><br>
+              You're doing great in <em>{{ insights.strong_subject }}</em>!
+            </div>
+          </div>
+        {% endif %}
+
+        {% if avg_accuracy >= 80 %}
+          <div class="insight-item good">
+            <span class="i-ico">🔥</span>
+            <div>
+              <strong>On Fire!</strong><br>
+              Your accuracy is above 80%. Keep it up!
+            </div>
+          </div>
+        {% elif avg_accuracy > 0 %}
+          <div class="insight-item info">
+            <span class="i-ico">💡</span>
+            <div>
+              <strong>Keep Practicing</strong><br>
+              Aim for 80% accuracy to unlock Concept Master badge.
+            </div>
+          </div>
+        {% endif %}
+
+        {% if active_days == 0 %}
+          <div class="insight-item info">
+            <span class="i-ico">🚀</span>
+            <div>
+              <strong>Get Started!</strong><br>
+              Play your first game today to begin tracking progress.
+            </div>
+          </div>
+        {% endif %}
+
+      </div>
+    </div>
+
+  </div>
+
+
+  <!-- ═══════════════════════════════════════
+       6. LEARNING TREND CHART
+  ═══════════════════════════════════════ -->
+  <div class="card row-full">
+    <h3>📈 Accuracy Trend</h3>
+
+    {% if trend_labels %}
+      <canvas id="trendChart"></canvas>
+    {% else %}
+      <div class="empty-state">
+        <span class="e-ico">📈</span>
+        Complete a few games to see your learning trend!
+      </div>
+    {% endif %}
+  </div>
+
+
+  <!-- ═══════════════════════════════════════
+       7. RECENT GAME SESSIONS
+  ═══════════════════════════════════════ -->
+  <div class="card row-full">
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:14px;">
+      <h3 style="margin:0;">🕹️ Recent Sessions</h3>
+      <a href="{{ url_for('flashcard.statistics') }}"
+         style="font-size:13px; color:var(--purple); font-weight:500;">
+        Full Stats →
+      </a>
+    </div>
+
+    {% if recent_games %}
+      {% for game in recent_games %}
+        <div class="session-row">
+          <div style="display:flex; align-items:center; gap:10px;">
+
+            {% if game.game_mode == 'flip_answer' %}
+              <span class="mode-tag flip">🔄 Flip</span>
+            {% elif game.game_mode == 'timed_challenge' %}
+              <span class="mode-tag timed">⚡ Timed</span>
+            {% else %}
+              <span class="mode-tag match">🧩 Match</span>
+            {% endif %}
+
+            <span style="color:var(--muted);">
+              {{ game.topic | replace('file_', 'File #') }}
+            </span>
+          </div>
+
+          <div style="display:flex; gap:20px; align-items:center;">
+            {% if game.total_cards and game.total_cards > 0 %}
+              <span style="font-size:13px; color:var(--muted);">
+                {{ game.correct_answers }}/{{ game.total_cards }} correct
+              </span>
+              <span style="font-weight:600; color:
+                {% if (game.correct_answers / game.total_cards * 100) >= 70 %}var(--green)
+                {% else %}var(--red){% endif %}">
+                {{ ((game.correct_answers / game.total_cards) * 100) | int }}%
+              </span>
+            {% endif %}
+            <span class="score-ring">⭐ {{ game.score | int }}</span>
+            <span style="font-size:12px; color:var(--muted);">
+              {{ game.created_at.strftime('%d %b') }}
+            </span>
+          </div>
+        </div>
+      {% endfor %}
+    {% else %}
+      <div class="empty-state">
+        <span class="e-ico">🕹️</span>
+        No sessions yet. Go to a topic and start playing!
+      </div>
+    {% endif %}
+  </div>
+
+</div><!-- end .dash -->
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+{% if trend_labels %}
+new Chart(document.getElementById("trendChart"), {
+  type: "line",
+  data: {
+    labels: {{ trend_labels | tojson }},
+    datasets: [{
+      label: "Accuracy %",
+      data: {{ trend_values | tojson }},
+      borderColor: "#6c5ce7",
+      backgroundColor: "rgba(108,92,231,0.08)",
+      borderWidth: 3,
+      tension: 0.4,
+      fill: true,
+      pointBackgroundColor: "#6c5ce7",
+      pointRadius: 5,
+      pointHoverRadius: 7
+    }]
+  },
+  options: {
+    responsive: true,
+    plugins: {
+      legend: { display: false },
+      tooltip: {
+        callbacks: {
+          label: ctx => ` ${ctx.parsed.y}% accuracy`
+        }
+      }
+    },
+    scales: {
+      y: {
+        min: 0, max: 100,
+        ticks: { callback: v => v + "%" },
+        grid: { color: "#f0eeff" }
+      },
+      x: { grid: { display: false } }
+    }
+  }
+});
+{% endif %}
+</script>
+
+{% endblock %}

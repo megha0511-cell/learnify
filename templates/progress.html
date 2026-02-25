@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Progress | Learnify</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+  <style>
+    /* ── FOOTER ── */
+.footer {
+  background-color: #0f0f1a;
+  text-align: center;
+  padding: 18px 20px;
+  font-family: 'Nunito', sans-serif;
+  font-size: 0.88rem;
+  color: #777;
+}
+
+.footer a {
+  color: #aaa;
+  text-decoration: none;
+  margin: 0 2px;
+}
+
+.footer a:hover {
+  color: #fff;
+}
+  </style>
+</head>
+<body>
+
+<div class="container mt-5">
+  <h3>📊 Learning Progress</h3>
+
+  <table class="table table-bordered mt-3">
+    <thead class="table-dark">
+      <tr>
+        <th>Topic</th>
+        <th>Status</th>
+        <th>Last Updated</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for r in records %}
+      <tr>
+        <td>{{ r.title }}</td>
+        <td>
+          {% if r.status == 'Completed' %}
+            <span class="badge bg-success">Completed</span>
+          {% else %}
+            <span class="badge bg-warning">In Progress</span>
+          {% endif %}
+        </td>
+        <td>{{ r.updated_at }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+
+  <a href="/dashboard" class="btn btn-secondary">⬅ Back</a>
+</div>
+<!-- FOOTER -->
+<footer class="footer">
+  <p>© 2025 Learnify · <a href="mailto:support@learnify.com">support@learnify.com</a></p>
+</footer>
+</body>
+</html>

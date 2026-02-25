@@ -1,0 +1,406 @@
+{% extends "base.html" %}
+{% block content %}
+
+<style>
+  :root {
+    --bg:        #f4f3ff;
+    --surface:   #ffffff;
+    --border:    #ece9ff;
+    --purple:    #6c5ce7;
+    --purple-lt: #a29bfe;
+    --green:     #00b894;
+    --orange:    #fd9644;
+    --red:       #e17055;
+    --text:      #1e1b3a;
+    --muted:     #8b87a8;
+    --radius:    16px;
+    --shadow:    0 4px 24px rgba(108,92,231,0.08);
+  }
+
+  .qh-wrapper {
+    padding: 2rem 2.5rem;
+    max-width: 960px;
+    margin: 0 auto;
+    font-family: 'Segoe UI', sans-serif;
+    color: var(--text);
+  }
+
+  .qh-back {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    color: var(--purple);
+    font-size: 0.88rem;
+    font-weight: 600;
+    text-decoration: none;
+    margin-bottom: 1.6rem;
+    transition: gap .2s;
+  }
+  .qh-back:hover { gap: 10px; }
+
+  .qh-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 2rem;
+    flex-wrap: wrap;
+    gap: 1rem;
+  }
+
+  .qh-title-group h1 {
+    font-size: 1.9rem;
+    font-weight: 800;
+    margin: 0 0 4px;
+    color: var(--text);
+  }
+
+  .qh-title-group .topic-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: var(--border);
+    color: var(--purple);
+    font-size: 0.82rem;
+    font-weight: 600;
+    padding: 4px 12px;
+    border-radius: 20px;
+  }
+
+  .qh-stats {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    gap: 1rem;
+    margin-bottom: 2rem;
+  }
+
+  .stat-card {
+    background: var(--surface);
+    border: 1.5px solid var(--border);
+    border-radius: var(--radius);
+    padding: 1.2rem 1.4rem;
+    box-shadow: var(--shadow);
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    transition: transform .2s, box-shadow .2s;
+  }
+  .stat-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 32px rgba(108,92,231,0.13);
+  }
+
+  .stat-card .stat-icon {
+    font-size: 1.4rem;
+    margin-bottom: 4px;
+  }
+
+  .stat-card .stat-value {
+    font-size: 1.7rem;
+    font-weight: 800;
+    color: var(--purple);
+    line-height: 1;
+  }
+
+  .stat-card .stat-label {
+    font-size: 0.78rem;
+    color: var(--muted);
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: .05em;
+  }
+
+  .qh-table-card {
+    background: var(--surface);
+    border: 1.5px solid var(--border);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    overflow: hidden;
+  }
+
+  .qh-table-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 1.2rem 1.6rem;
+    border-bottom: 1.5px solid var(--border);
+  }
+
+  .qh-table-header h2 {
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--text);
+    margin: 0;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .attempt-count {
+    background: var(--border);
+    color: var(--purple);
+    font-size: 0.78rem;
+    font-weight: 700;
+    padding: 3px 10px;
+    border-radius: 20px;
+  }
+
+  table.qh-table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+
+  .qh-table thead tr {
+    background: var(--bg);
+  }
+
+  .qh-table th {
+    padding: 0.85rem 1.6rem;
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .07em;
+    color: var(--muted);
+    text-align: left;
+  }
+
+  .qh-table tbody tr {
+    border-top: 1.5px solid var(--border);
+    transition: background .15s;
+  }
+
+  .qh-table tbody tr:hover {
+    background: #f9f8ff;
+  }
+
+  .qh-table td {
+    padding: 1rem 1.6rem;
+    font-size: 0.92rem;
+    color: var(--text);
+    vertical-align: middle;
+  }
+
+  .file-cell {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .file-icon {
+    width: 34px;
+    height: 34px;
+    background: linear-gradient(135deg, #ede9ff, #d5ccff);
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.95rem;
+    flex-shrink: 0;
+  }
+
+  .file-name {
+    font-weight: 600;
+    color: var(--text);
+    font-size: 0.9rem;
+  }
+
+  .score-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-weight: 700;
+    font-size: 0.95rem;
+    color: var(--text);
+  }
+
+  .score-pill .score-sep {
+    color: var(--muted);
+    font-weight: 400;
+  }
+
+  .pct-badge {
+    display: inline-block;
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 0.82rem;
+    font-weight: 700;
+  }
+
+  .pct-high { background: #d4f5ec; color: #00a67e; }
+  .pct-mid  { background: #fff3e0; color: #e08000; }
+  .pct-low  { background: #fde8e5; color: #c0392b; }
+
+  .pct-bar-wrap {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .pct-bar {
+    flex: 1;
+    height: 6px;
+    background: var(--border);
+    border-radius: 999px;
+    overflow: hidden;
+    min-width: 60px;
+  }
+
+  .pct-bar-fill {
+    height: 100%;
+    border-radius: 999px;
+    transition: width .6s ease;
+  }
+
+  .fill-high { background: linear-gradient(90deg, #00b894, #55efc4); }
+  .fill-mid  { background: linear-gradient(90deg, #fd9644, #ffeaa7); }
+  .fill-low  { background: linear-gradient(90deg, #e17055, #fab1a0); }
+
+  .date-cell {
+    color: var(--muted);
+    font-size: 0.85rem;
+  }
+
+  .qh-empty {
+    text-align: center;
+    padding: 4rem 2rem;
+    color: var(--muted);
+  }
+
+  .qh-empty .empty-icon {
+    font-size: 3.5rem;
+    margin-bottom: 1rem;
+    opacity: .5;
+  }
+
+  .qh-empty h3 {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: var(--text);
+    margin: 0 0 8px;
+  }
+
+  .qh-empty p {
+    font-size: 0.88rem;
+    margin: 0;
+  }
+
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(16px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  .qh-stats .stat-card:nth-child(1) { animation: fadeUp .4s ease both; }
+  .qh-stats .stat-card:nth-child(2) { animation: fadeUp .4s .08s ease both; }
+  .qh-stats .stat-card:nth-child(3) { animation: fadeUp .4s .16s ease both; }
+  .qh-table-card                    { animation: fadeUp .4s .24s ease both; }
+</style>
+
+<div class="qh-wrapper">
+
+  <a href="/quizzes" class="qh-back">← Back to Quizzes</a>
+
+  <div class="qh-header">
+    <div class="qh-title-group">
+      <h1>📊 Quiz History</h1>
+      <span class="topic-badge">📚 {{ topic.title }}</span>
+    </div>
+  </div>
+
+  {% set total_attempts = attempts | length %}
+  {% set best_pct = namespace(val=0) %}
+  {% set avg_pct  = namespace(total=0) %}
+
+  {% for a in attempts %}
+    {% if a.percentage > best_pct.val %}{% set best_pct.val = a.percentage %}{% endif %}
+    {% set avg_pct.total = avg_pct.total + a.percentage %}
+  {% endfor %}
+
+  {% set avg_val = (avg_pct.total / total_attempts) | round(1) if total_attempts > 0 else 0 %}
+
+  <div class="qh-stats">
+    <div class="stat-card">
+      <div class="stat-icon">🎯</div>
+      <div class="stat-value">{{ total_attempts }}</div>
+      <div class="stat-label">Total Attempts</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon">🏆</div>
+      <div class="stat-value">{{ best_pct.val | round(1) }}%</div>
+      <div class="stat-label">Best Score</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon">📈</div>
+      <div class="stat-value">{{ avg_val }}%</div>
+      <div class="stat-label">Avg Accuracy</div>
+    </div>
+  </div>
+
+  <div class="qh-table-card">
+    <div class="qh-table-header">
+      <h2>📋 All Attempts</h2>
+      <span class="attempt-count">{{ total_attempts }} attempt{{ 's' if total_attempts != 1 }}</span>
+    </div>
+
+    {% if attempts %}
+    <table class="qh-table">
+      <thead>
+        <tr>
+          <th>File</th>
+          <th>Score</th>
+          <th>Accuracy</th>
+          <th>Date</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for a in attempts %}
+        {% set pct = a.percentage | float %}
+        {% if pct >= 75 %}
+          {% set pct_class = 'pct-high' %}
+          {% set bar_class = 'fill-high' %}
+        {% elif pct >= 40 %}
+          {% set pct_class = 'pct-mid' %}
+          {% set bar_class = 'fill-mid' %}
+        {% else %}
+          {% set pct_class = 'pct-low' %}
+          {% set bar_class = 'fill-low' %}
+        {% endif %}
+
+        <tr>
+          <td>
+            <div class="file-cell">
+              <div class="file-icon">📄</div>
+              <span class="file-name">{{ a.file_name }}</span>
+            </div>
+          </td>
+          <td>
+            <span class="score-pill">
+              {{ a.score }} <span class="score-sep">/</span> {{ a.total_marks }}
+            </span>
+          </td>
+          <td>
+            <div class="pct-bar-wrap">
+              <div class="pct-bar">
+                <div class="pct-bar-fill {{ bar_class }}" style="width: {{ pct }}%"></div>
+              </div>
+              <span class="pct-badge {{ pct_class }}">{{ pct }}%</span>
+            </div>
+          </td>
+          <td>
+            <span class="date-cell">{{ a.attempted_at.strftime('%d %b %Y, %I:%M %p') }}</span>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+
+    {% else %}
+    <div class="qh-empty">
+      <div class="empty-icon">📭</div>
+      <h3>No attempts yet</h3>
+      <p>Go to your topic and take a quiz to see results here.</p>
+    </div>
+    {% endif %}
+  </div>
+
+</div>
+
+{% endblock %}

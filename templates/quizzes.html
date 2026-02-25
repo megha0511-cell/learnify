@@ -1,0 +1,239 @@
+{% extends "base.html" %}
+{% block content %}
+
+<style>
+  :root {
+    --bg:        #EDE4F0;
+    --primary:   #CBB4D4;
+    --secondary: #A88BC1;
+    --accent:    #8E6FB1;
+    --dark:      #3F2E4D;
+    --white:     #ffffff;
+    --border:    #ddd4e8;
+    --muted:     #9b87a8;
+    --surface:   #f7f2fa;
+    --shadow:    0 2px 14px rgba(63,46,77,0.08);
+    --radius:    16px;
+  }
+
+  /* ── PAGE HEADER ── */
+  .page-header {
+    margin-bottom: 26px;
+  }
+
+  .page-header h2 {
+    font-size: 24px;
+    font-weight: 800;
+    color: var(--dark);
+    margin: 0 0 5px;
+    font-family: 'Sora', sans-serif;
+  }
+
+  .page-header p {
+    font-size: 14px;
+    color: var(--muted);
+    margin: 0;
+  }
+
+  /* ── GRID — 2 columns ── */
+  .quiz-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 18px;
+  }
+
+  /* ── CARD ── */
+  .quiz-card {
+    background: var(--white);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 22px 22px 20px;
+    box-shadow: var(--shadow);
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    transition: box-shadow 0.2s, transform 0.2s, border-color 0.2s;
+  }
+
+  .quiz-card:hover {
+    box-shadow: 0 8px 28px rgba(142,111,177,0.14);
+    transform: translateY(-2px);
+    border-color: var(--secondary);
+  }
+
+  /* ── TOPIC NAME ── */
+  .quiz-card h3 {
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--dark);
+    margin: 0;
+    font-family: 'Sora', sans-serif;
+    text-transform: capitalize;
+  }
+
+  /* ── STATS ROW ── */
+  .quiz-stats {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+
+  .stat-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 5px 12px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    font-size: 12.5px;
+    font-weight: 600;
+    color: var(--accent);
+  }
+
+  /* ── DIVIDER ── */
+  .quiz-card hr {
+    border: none;
+    border-top: 1px solid var(--border);
+    margin: 2px 0;
+  }
+
+  /* ── ACTION BUTTONS — stacked, full width ── */
+  .quiz-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-top: 4px;
+  }
+
+  .btn-primary {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 7px;
+    width: 100%;
+    padding: 11px 16px;
+    background: linear-gradient(135deg, var(--accent), var(--secondary));
+    color: var(--white);
+    border-radius: 11px;
+    text-decoration: none;
+    font-size: 13.5px;
+    font-weight: 700;
+    border: none;
+    cursor: pointer;
+    font-family: 'DM Sans', sans-serif;
+    transition: opacity 0.2s, transform 0.2s;
+    box-shadow: 0 4px 14px rgba(142,111,177,0.3);
+  }
+
+  .btn-primary:hover {
+    opacity: 0.9;
+    transform: translateY(-1px);
+  }
+
+  .btn-soft {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 7px;
+    width: 100%;
+    padding: 10px 16px;
+    background: var(--surface);
+    color: var(--accent);
+    border: 1.5px solid var(--border);
+    border-radius: 11px;
+    text-decoration: none;
+    font-size: 13.5px;
+    font-weight: 600;
+    cursor: pointer;
+    font-family: 'DM Sans', sans-serif;
+    transition: all 0.2s;
+  }
+
+  .btn-soft:hover {
+    background: var(--bg);
+    border-color: var(--secondary);
+  }
+
+  /* ── EMPTY STATE ── */
+  .empty-state {
+    text-align: center;
+    padding: 70px 30px;
+    background: var(--white);
+    border: 1.5px dashed var(--primary);
+    border-radius: var(--radius);
+  }
+
+  .empty-state .e-icon {
+    font-size: 48px;
+    display: block;
+    margin-bottom: 14px;
+  }
+
+  .empty-state p {
+    font-size: 14px;
+    color: var(--muted);
+    margin: 0;
+  }
+
+  @media (max-width: 640px) {
+    .quiz-grid { grid-template-columns: 1fr; }
+  }
+</style>
+
+<!-- HEADER -->
+<div class="page-header">
+  <h2>🧠 Quizzes</h2>
+  <p>Test your understanding topic by topic</p>
+</div>
+
+{% if quizzes %}
+  <div class="quiz-grid">
+    {% for q in quizzes %}
+      <div class="quiz-card">
+
+        <!-- Topic name -->
+        <h3>📘 {{ q.topic_title }}</h3>
+
+        <!-- Stats chips -->
+        <div class="quiz-stats">
+          <span class="stat-chip">
+            🔁 {{ q.attempts or 0 }} attempts
+          </span>
+          <span class="stat-chip">
+            ⭐
+            {% if q.best_score is not none %}
+              {{ q.best_score }}%
+            {% else %}
+              —%
+            {% endif %}
+            best
+          </span>
+        </div>
+
+        <hr>
+
+        <!-- Action buttons — stacked -->
+        <div class="quiz-actions">
+          <a href="/topic/{{ q.topic_id }}" class="btn-primary">
+            ▶ View Topic Quizzes
+          </a>
+          {% if q.attempts > 0 %}
+            <a href="/quiz-history/{{ q.topic_id }}" class="btn-soft">
+              📊 View History
+            </a>
+          {% endif %}
+        </div>
+
+      </div>
+    {% endfor %}
+  </div>
+
+{% else %}
+  <div class="empty-state">
+    <span class="e-icon">📝</span>
+    <p>No quizzes available yet.<br>Start by exploring some topics!</p>
+  </div>
+{% endif %}
+
+{% endblock %}

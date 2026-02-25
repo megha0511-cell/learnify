@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Register – Learnify</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/auth.css') }}">
+</head>
+<body>
+<a href="{{ url_for('home') }}" class="back-btn">← Back</a>
+
+<div class="auth-container">
+  <div class="auth-card">
+    <h2>Create Account ✨</h2>
+    <p>Start your learning journey</p>
+
+    <form method="POST">
+      <input type="text" name="name" placeholder="Full Name" required>
+      <input type="email" name="email" placeholder="Email" required>
+      <input type="password" name="password" placeholder="Password" required>
+      <button class="auth-btn">Register</button>
+    </form>
+
+    <div class="auth-link">
+      Already have an account? <a href="/login">Login</a>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>

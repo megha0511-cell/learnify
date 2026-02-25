@@ -1,0 +1,788 @@
+{% extends "base.html" %}
+{% block content %}
+
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Sora:wght@400;600;700&family=DM+Sans:wght@400;500&display=swap');
+
+  * { font-family: 'DM Sans', sans-serif; box-sizing: border-box; }
+  h1,h2,h3,h4 { font-family: 'Sora', sans-serif; }
+
+  :root {
+    --purple:   #6c5ce7;
+    --purple-lt:#a29bfe;
+    --green:    #00b894;
+    --orange:   #fd9644;
+    --red:      #e17055;
+    --blue:     #0984e3;
+    --bg:       #f4f3ff;
+    --surface:  #ffffff;
+    --border:   #ece9ff;
+    --text:     #1e1b3a;
+    --muted:    #8b87a8;
+    --radius:   16px;
+    --shadow:   0 4px 24px rgba(108,92,231,0.08);
+  }
+
+  .analytics-wrap {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 28px 20px 60px;
+  }
+
+  /* ── PAGE HEADER ── */
+  .page-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    margin-bottom: 24px;
+  }
+
+  .page-header h2 { font-size: 26px; margin: 0 0 4px; }
+  .page-header p  { margin: 0; color: var(--muted); font-size: 14px; }
+
+  /* ── INSIGHT BANNER ── */
+  .insight-banner {
+    border-radius: var(--radius);
+    padding: 18px 22px;
+    margin-bottom: 26px;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    font-size: 14.5px;
+    font-weight: 500;
+  }
+
+  .insight-banner.bad  {
+    background: #fff3e0;
+    border-left: 5px solid var(--orange);
+  }
+  .insight-banner.mid  {
+    background: #f0eeff;
+    border-left: 5px solid var(--purple);
+  }
+  .insight-banner.good {
+    background: #e8faf4;
+    border-left: 5px solid var(--green);
+  }
+  .insight-banner.empty {
+    background: #f5f5ff;
+    border-left: 5px solid #ccc;
+  }
+
+  .insight-banner .ib-icon { font-size: 26px; flex-shrink: 0; }
+
+  /* ── KPI STRIP ── */
+  .kpi-row {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 14px;
+    margin-bottom: 26px;
+  }
+
+  .kpi-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 18px 16px;
+    box-shadow: var(--shadow);
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .kpi-icon {
+    width: 42px; height: 42px;
+    border-radius: 12px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 20px; flex-shrink: 0;
+  }
+
+  .kpi-icon.purple { background: #ede9ff; }
+  .kpi-icon.green  { background: #e0faf4; }
+  .kpi-icon.orange { background: #fff3e0; }
+  .kpi-icon.blue   { background: #e8f4fd; }
+  .kpi-icon.red    { background: #ffe8e4; }
+
+  .kpi-val  { font-size: 22px; font-weight: 700; line-height: 1; }
+  .kpi-lbl  { font-size: 12px; color: var(--muted); margin-top: 3px; }
+
+  /* ── CARD ── */
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 20px 22px;
+    box-shadow: var(--shadow);
+  }
+
+  .card h4 {
+    font-size: 14px;
+    margin: 0 0 14px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    color: var(--text);
+  }
+
+  /* ── CHART GRID ── */
+  .chart-grid-top {
+    display: grid;
+    grid-template-columns: 1.4fr 1fr 1fr;
+    gap: 18px;
+    margin-bottom: 18px;
+  }
+
+  .chart-grid-bottom {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 18px;
+    margin-bottom: 18px;
+  }
+
+  .chart-wrap { position: relative; height: 220px; }
+  .chart-wrap canvas { max-height: 220px !important; }
+
+  /* ── DONUT CENTER TEXT ── */
+  .donut-wrapper {
+    position: relative;
+    height: 220px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .donut-center {
+    position: absolute;
+    text-align: center;
+    pointer-events: none;
+  }
+
+  .donut-center .dc-val {
+    font-size: 26px;
+    font-weight: 700;
+    color: var(--purple);
+    font-family: 'Sora', sans-serif;
+  }
+
+  .donut-center .dc-lbl {
+    font-size: 11px;
+    color: var(--muted);
+  }
+
+  /* ── TOPIC MASTERY BARS ── */
+  .mastery-row {
+    margin-bottom: 13px;
+  }
+
+  .mastery-row .m-header {
+    display: flex;
+    justify-content: space-between;
+    font-size: 13px;
+    margin-bottom: 5px;
+  }
+
+  .mastery-bar {
+    height: 8px;
+    background: #ece9ff;
+    border-radius: 6px;
+    overflow: hidden;
+  }
+
+  .mastery-fill {
+    height: 100%;
+    border-radius: 6px;
+    transition: width 1s ease;
+  }
+
+  .mastery-fill.low  { background: linear-gradient(90deg,#e17055,#fd9644); }
+  .mastery-fill.mid  { background: linear-gradient(90deg,#fd9644,#ffd32a); }
+  .mastery-fill.high { background: linear-gradient(90deg,#6c5ce7,#a29bfe); }
+
+  /* ── STREAK & BEST TIME MINI CARDS ── */
+  .mini-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    margin-bottom: 18px;
+  }
+
+  .mini-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 16px 18px;
+    box-shadow: var(--shadow);
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .mini-card .mc-icon { font-size: 28px; }
+  .mini-card .mc-val  { font-size: 20px; font-weight: 700; }
+  .mini-card .mc-lbl  { font-size: 12px; color: var(--muted); }
+
+  /* ── BADGE PROGRESS ── */
+  .badge-progress-list { display: flex; flex-direction: column; gap: 10px; }
+
+  .bp-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 12px;
+    border-radius: 12px;
+    background: #faf9ff;
+    border: 1px solid var(--border);
+  }
+
+  .bp-row .bp-icon { font-size: 22px; }
+
+  .bp-row .bp-bar {
+    flex: 1;
+    height: 6px;
+    background: #ece9ff;
+    border-radius: 4px;
+    overflow: hidden;
+  }
+
+  .bp-row .bp-fill {
+    height: 100%;
+    border-radius: 4px;
+    background: linear-gradient(90deg, #6c5ce7, #a29bfe);
+  }
+
+  .bp-row .bp-pct {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--purple);
+    min-width: 34px;
+    text-align: right;
+  }
+
+  .bp-row.done .bp-fill { background: linear-gradient(90deg, #00b894, #55efc4); }
+  .bp-row.done .bp-pct  { color: var(--green); }
+
+  /* ── TABLE ── */
+  .analytics-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13.5px;
+  }
+
+  .analytics-table thead tr {
+    background: #f4f3ff;
+  }
+
+  .analytics-table th {
+    padding: 11px 14px;
+    text-align: left;
+    font-weight: 600;
+    font-size: 12px;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    border-bottom: 2px solid var(--border);
+  }
+
+  .analytics-table td {
+    padding: 11px 14px;
+    border-bottom: 1px solid #f0eeff;
+    color: var(--text);
+  }
+
+  .analytics-table tbody tr {
+    transition: background 0.15s;
+  }
+
+  .analytics-table tbody tr:hover {
+    background: #faf9ff;
+  }
+
+  .type-badge {
+    display: inline-block;
+    padding: 3px 10px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 600;
+  }
+
+  .type-badge.quiz  { background: #e7f5ff; color: #1971c2; }
+  .type-badge.game  { background: #ebfbee; color: #2f9e44; }
+
+  .acc-pill {
+    display: inline-block;
+    padding: 3px 10px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 600;
+  }
+
+  .acc-pill.high { background: #e8faf4; color: #00b894; }
+  .acc-pill.mid  { background: #fff3e0; color: #fd9644; }
+  .acc-pill.low  { background: #ffe8e4; color: #e17055; }
+
+  /* ── EMPTY STATE ── */
+  .empty-state {
+    text-align: center;
+    padding: 30px;
+    color: var(--muted);
+    font-size: 14px;
+  }
+  .empty-state .e-ico { font-size: 36px; display: block; margin-bottom: 8px; }
+
+  /* ── RESPONSIVE ── */
+  @media (max-width: 900px) {
+    .kpi-row          { grid-template-columns: repeat(3,1fr); }
+    .chart-grid-top   { grid-template-columns: 1fr; }
+    .chart-grid-bottom{ grid-template-columns: 1fr; }
+    .mini-grid        { grid-template-columns: 1fr; }
+  }
+
+  @media (max-width: 600px) {
+    .kpi-row { grid-template-columns: repeat(2,1fr); }
+  }
+</style>
+
+<div class="analytics-wrap">
+
+  <!-- ═══════════════════════════
+       HEADER
+  ═══════════════════════════ -->
+  <div class="page-header">
+    <div>
+      <h2>📊 Learning Analytics</h2>
+      <p>Your complete quiz & game performance overview</p>
+    </div>
+  </div>
+
+
+  <!-- ═══════════════════════════
+       INSIGHT BANNER
+  ═══════════════════════════ -->
+  <div class="insight-banner
+    {% if avg_accuracy == 0 %}empty
+    {% elif avg_accuracy < 40 %}bad
+    {% elif avg_accuracy < 70 %}mid
+    {% else %}good{% endif %}">
+
+    <span class="ib-icon">
+      {% if avg_accuracy == 0 %}💤
+      {% elif avg_accuracy < 40 %}⚠️
+      {% elif avg_accuracy < 70 %}💡
+      {% else %}🔥{% endif %}
+    </span>
+
+    <div>
+      <strong>
+        {% if avg_accuracy == 0 %}No data yet
+        {% elif avg_accuracy < 40 %}Needs Improvement
+        {% elif avg_accuracy < 70 %}Good Progress
+        {% else %}Excellent Performance!{% endif %}
+      </strong>
+      &nbsp;—&nbsp;
+      {% if avg_accuracy == 0 %}
+        Start attempting quizzes and games to unlock personalized insights.
+      {% elif avg_accuracy < 40 %}
+        Accuracy is low — re-read simplified content and retry quizzes.
+      {% elif avg_accuracy < 70 %}
+        You're doing well! Aim for 80%+ to unlock the Concept Master badge.
+      {% else %}
+        Outstanding! You're in the top learning zone. Keep challenging yourself.
+      {% endif %}
+    </div>
+  </div>
+
+
+  <!-- ═══════════════════════════
+       KPI STRIP
+  ═══════════════════════════ -->
+  <div class="kpi-row">
+    <div class="kpi-card">
+      <div class="kpi-icon purple">🧠</div>
+      <div>
+        <div class="kpi-val">{{ total_quizzes }}</div>
+        <div class="kpi-lbl">Quizzes Done</div>
+      </div>
+    </div>
+
+    <div class="kpi-card">
+      <div class="kpi-icon green">🎮</div>
+      <div>
+        <div class="kpi-val">{{ total_games }}</div>
+        <div class="kpi-lbl">Games Played</div>
+      </div>
+    </div>
+
+    <div class="kpi-card">
+      <div class="kpi-icon orange">🎯</div>
+      <div>
+        <div class="kpi-val">{{ avg_accuracy }}%</div>
+        <div class="kpi-lbl">Avg Accuracy</div>
+      </div>
+    </div>
+
+    <div class="kpi-card">
+      <div class="kpi-icon blue">🏆</div>
+      <div>
+        <div class="kpi-val">{{ earned_badges | length }}</div>
+        <div class="kpi-lbl">Badges Earned</div>
+      </div>
+    </div>
+
+    <div class="kpi-card">
+      <div class="kpi-icon red">🔥</div>
+      <div>
+        <div class="kpi-val">{{ active_days }}</div>
+        <div class="kpi-lbl">Active Days</div>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- ═══════════════════════════
+       ROW 1 — Line + Donut + Mastery
+  ═══════════════════════════ -->
+  <div class="chart-grid-top">
+
+    <!-- Accuracy Over Time -->
+    <div class="card">
+      <h4>📈 Accuracy Over Time</h4>
+      <div class="chart-wrap">
+        <canvas id="lineChart"></canvas>
+      </div>
+    </div>
+
+    <!-- Donut -->
+    <div class="card">
+      <h4>🎯 Overall Accuracy</h4>
+      <div class="donut-wrapper">
+        <canvas id="donutChart"></canvas>
+        <div class="donut-center">
+          <div class="dc-val">{{ avg_accuracy }}%</div>
+          <div class="dc-lbl">Accuracy</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Topic Mastery Bars -->
+    <div class="card">
+      <h4>📚 Topic Mastery</h4>
+      {% if topic_mastery %}
+        {% for t in topic_mastery %}
+          <div class="mastery-row">
+            <div class="m-header">
+              <span>{{ t.name }}</span>
+              <span style="font-weight:600;">{{ t.accuracy | int }}%</span>
+            </div>
+            <div class="mastery-bar">
+              <div class="mastery-fill
+                {% if t.accuracy < 40 %}low
+                {% elif t.accuracy < 70 %}mid
+                {% else %}high{% endif %}"
+                style="width:{{ t.accuracy }}%">
+              </div>
+            </div>
+          </div>
+        {% endfor %}
+      {% else %}
+        <div class="empty-state">
+          <span class="e-ico">📂</span>
+          Play games to see topic mastery
+        </div>
+      {% endif %}
+    </div>
+
+  </div>
+
+
+  <!-- ═══════════════════════════
+       ROW 2 — Bar + Game Mode Donut
+  ═══════════════════════════ -->
+  <div class="chart-grid-bottom">
+
+    <!-- Accuracy by File -->
+    <div class="card">
+      <h4>📄 Accuracy by File</h4>
+      <div class="chart-wrap">
+        <canvas id="barChart"></canvas>
+      </div>
+    </div>
+
+    <!-- Game Mode Breakdown -->
+    <div class="card">
+      <h4>🕹️ Game Mode Breakdown</h4>
+      <div class="chart-wrap">
+        <canvas id="modeChart"></canvas>
+      </div>
+    </div>
+
+  </div>
+
+
+  <!-- ═══════════════════════════
+       ROW 3 — Mini Stats + Badge Progress
+  ═══════════════════════════ -->
+  <div class="mini-grid">
+
+    <div class="mini-card">
+      <span class="mc-icon">⚡</span>
+      <div>
+        <div class="mc-val">{{ best_score or 0 }}</div>
+        <div class="mc-lbl">Best Game Score</div>
+      </div>
+    </div>
+
+    <div class="mini-card">
+      <span class="mc-icon">📅</span>
+      <div>
+        <div class="mc-val">{{ total_quizzes + total_games }}</div>
+        <div class="mc-lbl">Total Attempts</div>
+      </div>
+    </div>
+
+  </div>
+
+
+  <!-- ═══════════════════════════
+       BADGE PROGRESS
+  ═══════════════════════════ -->
+  <div class="card" style="margin-bottom:18px;">
+    <h4>🏅 Badge Progress</h4>
+
+    <div class="badge-progress-list">
+
+      <!-- Quick Thinker -->
+      {% set qt_pct = [(timed_correct_count / 10 * 100), 100] | min | int %}
+      <div class="bp-row {% if qt_pct >= 100 %}done{% endif %}">
+        <span class="bp-icon">⚡</span>
+        <div style="flex:1;">
+          <div style="font-size:13px; font-weight:600; margin-bottom:5px;">
+            Quick Thinker
+            <small style="font-weight:400; color:var(--muted);">
+              — {{ timed_correct_count }}/10 timed correct
+            </small>
+          </div>
+          <div class="bp-bar">
+            <div class="bp-fill" style="width:{{ qt_pct }}%"></div>
+          </div>
+        </div>
+        <span class="bp-pct">{{ qt_pct }}%</span>
+      </div>
+
+      <!-- Flashcard Pro -->
+      {% set fp_pct = [(total_cards_done / 100 * 100), 100] | min | int %}
+      <div class="bp-row {% if fp_pct >= 100 %}done{% endif %}">
+        <span class="bp-icon">🏆</span>
+        <div style="flex:1;">
+          <div style="font-size:13px; font-weight:600; margin-bottom:5px;">
+            Flashcard Pro
+            <small style="font-weight:400; color:var(--muted);">
+              — {{ total_cards_done }}/100 cards done
+            </small>
+          </div>
+          <div class="bp-bar">
+            <div class="bp-fill" style="width:{{ fp_pct }}%"></div>
+          </div>
+        </div>
+        <span class="bp-pct">{{ fp_pct }}%</span>
+      </div>
+
+      <!-- Concept Master -->
+      {% set cm_pct = [avg_accuracy, 100] | min | int %}
+      <div class="bp-row {% if avg_accuracy >= 90 %}done{% endif %}">
+        <span class="bp-icon">🎓</span>
+        <div style="flex:1;">
+          <div style="font-size:13px; font-weight:600; margin-bottom:5px;">
+            Concept Master
+            <small style="font-weight:400; color:var(--muted);">
+              — {{ avg_accuracy }}% / 90% accuracy needed
+            </small>
+          </div>
+          <div class="bp-bar">
+            <div class="bp-fill" style="width:{{ cm_pct }}%"></div>
+          </div>
+        </div>
+        <span class="bp-pct">{{ cm_pct }}%</span>
+      </div>
+
+    </div>
+  </div>
+
+
+  <!-- ═══════════════════════════
+       DETAILED TABLE
+  ═══════════════════════════ -->
+  <div class="card">
+    <h4>📋 Detailed Attempts</h4>
+
+    {% if analytics %}
+      <div style="overflow-x:auto;">
+        <table class="analytics-table">
+          <thead>
+            <tr>
+              <th>Type</th>
+              <th>File</th>
+              <th>Score</th>
+              <th>Total</th>
+              <th>Accuracy</th>
+              <th>Date</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for row in analytics %}
+              {% set acc = ((row.score / row.total) * 100) | round(1) if row.total > 0 else 0 %}
+              <tr>
+                <td>
+                  <span class="type-badge
+                    {% if row.type == 'Quiz' %}quiz{% else %}game{% endif %}">
+                    {{ row.type }}
+                  </span>
+                </td>
+                <td>{{ row.file_name }}</td>
+                <td>{{ row.score }}</td>
+                <td>{{ row.total }}</td>
+                <td>
+                  <span class="acc-pill
+                    {% if acc >= 70 %}high
+                    {% elif acc >= 40 %}mid
+                    {% else %}low{% endif %}">
+                    {{ acc }}%
+                  </span>
+                </td>
+                <td style="color:var(--muted);">{{ row.attempted_at }}</td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    {% else %}
+      <div class="empty-state">
+        <span class="e-ico">📋</span>
+        No attempts recorded yet. Start a quiz or game!
+      </div>
+    {% endif %}
+  </div>
+
+</div><!-- end .analytics-wrap -->
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+const purple    = '#6c5ce7';
+const purpleLt  = '#a29bfe';
+const green     = '#00b894';
+const orange    = '#fd9644';
+const red       = '#e17055';
+const blue      = '#0984e3';
+
+// ── LINE CHART ──
+new Chart(document.getElementById("lineChart"), {
+  type: "line",
+  data: {
+    labels: {{ line_labels | tojson }},
+    datasets: [{
+      label: "Accuracy %",
+      data: {{ line_data | tojson }},
+      borderColor: purple,
+      backgroundColor: "rgba(108,92,231,0.07)",
+      borderWidth: 3,
+      tension: 0.4,
+      fill: true,
+      pointBackgroundColor: purple,
+      pointRadius: 5,
+      pointHoverRadius: 7
+    }]
+  },
+  options: {
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: { legend: { display: false } },
+    scales: {
+      y: {
+        beginAtZero: true, max: 100,
+        ticks: { callback: v => v + "%" },
+        grid: { color: "#f0eeff" }
+      },
+      x: { grid: { display: false } }
+    }
+  }
+});
+
+// ── BAR CHART ──
+new Chart(document.getElementById("barChart"), {
+  type: "bar",
+  data: {
+    labels: {{ bar_labels | tojson }},
+    datasets: [{
+      label: "Accuracy %",
+      data: {{ bar_data | tojson }},
+      backgroundColor: {{ bar_data | tojson }}.map(
+        v => v >= 70 ? 'rgba(0,184,148,0.7)' :
+             v >= 40 ? 'rgba(253,150,68,0.7)' :
+                       'rgba(225,112,85,0.7)'
+      ),
+      borderRadius: 10,
+      borderSkipped: false
+    }]
+  },
+  options: {
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: { legend: { display: false } },
+    scales: {
+      y: {
+        beginAtZero: true, max: 100,
+        ticks: { callback: v => v + "%" },
+        grid: { color: "#f0eeff" }
+      },
+      x: { grid: { display: false } }
+    }
+  }
+});
+
+// ── DONUT CHART ──
+new Chart(document.getElementById("donutChart"), {
+  type: "doughnut",
+  data: {
+    labels: ["Correct", "Incorrect"],
+    datasets: [{
+      data: [{{ avg_accuracy }}, {{ 100 - avg_accuracy }}],
+      backgroundColor: [purple, "#ece9ff"],
+      borderWidth: 0,
+      hoverOffset: 6
+    }]
+  },
+  options: {
+    cutout: "74%",
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: { legend: { display: false } }
+  }
+});
+
+// ── GAME MODE CHART ──
+new Chart(document.getElementById("modeChart"), {
+  type: "doughnut",
+  data: {
+    labels: ["Flip & Answer", "Timed Challenge", "Match Game"],
+    datasets: [{
+      data: {{ mode_counts | tojson }},
+      backgroundColor: [blue, orange, green],
+      borderWidth: 0,
+      hoverOffset: 6
+    }]
+  },
+  options: {
+    cutout: "60%",
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: {
+      legend: {
+        display: true,
+        position: "bottom",
+        labels: { font: { size: 12 }, padding: 14 }
+      }
+    }
+  }
+});
+</script>
+
+{% endblock %}

@@ -1,0 +1,62 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<div class="page-header">
+  <h2>➕ Add New Topic</h2>
+  <p class="muted">Create a topic with content and files</p>
+</div>
+
+<div class="card add-topic-card">
+
+  <form
+    method="POST"
+    action="/add-topic"
+    enctype="multipart/form-data"
+    class="add-topic-form"
+  >
+
+    <!-- TITLE -->
+    <div class="form-group">
+      <label>📘 Topic Title</label>
+      <input
+        type="text"
+        name="title"
+        placeholder="Eg: Java Basics"
+        required
+      >
+    </div>
+
+    <!-- CONTENT -->
+    <div class="form-group">
+      <label>📝 Topic Content</label>
+      <textarea
+        name="content"
+        rows="6"
+        placeholder="Write or paste topic content here..."
+        required
+      ></textarea>
+    </div>
+
+    <!-- FILE -->
+    <div class="form-group">
+      <label>📎 Attach File</label>
+      <input type="file" name="file">
+      <small class="muted">PDF, DOC, PPT, Images supported</small>
+    </div>
+
+    <!-- ACTIONS -->
+    <div class="form-actions">
+      <button type="submit" class="btn-primary">
+        🚀 Upload Topic
+      </button>
+      <a href="/my-topics" class="btn-soft">
+        Cancel
+      </a>
+    </div>
+
+  </form>
+
+</div>
+
+{% endblock %}

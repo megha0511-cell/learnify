@@ -1,0 +1,807 @@
+{% extends "base.html" %}
+{% block title %}Timed Challenge{% endblock %}
+{% block content %}
+
+<style>
+  :root {
+    --bg:        #EDE4F0;
+    --primary:   #CBB4D4;
+    --secondary: #A88BC1;
+    --accent:    #8E6FB1;
+    --dark:      #3F2E4D;
+    --white:     #ffffff;
+    --border:    #ddd4e8;
+    --muted:     #9b87a8;
+    --surface:   #f7f2fa;
+    --green:     #00b894;
+    --red:       #e17055;
+    --orange:    #fd9644;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body { background: var(--bg); font-family: 'DM Sans', sans-serif; }
+  h1,h2,h3,h4 { font-family: 'Sora', sans-serif; }
+
+  .game-wrap {
+    max-width: 720px;
+    margin: 0 auto;
+    padding: 0 16px 60px;
+  }
+
+  /* ══════════════════════════
+     PAGE TITLE
+  ══════════════════════════ */
+  .game-title-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 24px;
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+
+  .game-title-row h2 {
+    font-size: 22px;
+    font-weight: 800;
+    color: var(--dark);
+    margin: 0;
+  }
+
+  .game-title-row p {
+    font-size: 13px;
+    color: var(--muted);
+    margin: 4px 0 0;
+  }
+
+  .back-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 9px 16px;
+    background: var(--white);
+    border: 1.5px solid var(--border);
+    border-radius: 10px;
+    color: var(--accent);
+    font-size: 13px;
+    font-weight: 600;
+    text-decoration: none;
+    transition: all 0.2s;
+    flex-shrink: 0;
+  }
+
+  .back-btn:hover {
+    background: var(--surface);
+    border-color: var(--secondary);
+  }
+
+  /* ══════════════════════════
+     START SCREEN
+  ══════════════════════════ */
+  .start-screen {
+    background: var(--white);
+    border: 1px solid var(--border);
+    border-radius: 22px;
+    padding: 50px 30px;
+    text-align: center;
+    box-shadow: 0 4px 24px rgba(63,46,77,0.10);
+  }
+
+  .start-emoji {
+    font-size: 68px;
+    display: block;
+    margin-bottom: 20px;
+    animation: pulse 1.5s ease-in-out infinite;
+  }
+
+  @keyframes pulse {
+    0%,100% { transform: scale(1); }
+    50%      { transform: scale(1.1); }
+  }
+
+  .start-screen h2 {
+    font-size: 28px;
+    font-weight: 800;
+    color: var(--dark);
+    margin-bottom: 12px;
+  }
+
+  .start-screen p {
+    font-size: 15px;
+    color: var(--muted);
+    margin-bottom: 32px;
+    line-height: 1.6;
+  }
+
+  .start-info-row {
+    display: flex;
+    justify-content: center;
+    gap: 14px;
+    margin-bottom: 32px;
+    flex-wrap: wrap;
+  }
+
+  .info-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 16px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--accent);
+  }
+
+  .btn-start {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    padding: 16px 40px;
+    background: linear-gradient(135deg, var(--accent), var(--secondary));
+    color: var(--white);
+    border-radius: 14px;
+    font-size: 16px;
+    font-weight: 800;
+    border: none;
+    cursor: pointer;
+    font-family: 'Sora', sans-serif;
+    transition: transform 0.2s, box-shadow 0.2s;
+    box-shadow: 0 6px 22px rgba(142,111,177,0.4);
+    letter-spacing: 0.3px;
+  }
+
+  .btn-start:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 30px rgba(142,111,177,0.5);
+  }
+
+  /* ══════════════════════════
+     GAME SCREEN
+  ══════════════════════════ */
+  .game-screen { display: none; }
+
+  /* ── HUD (timer + score) ── */
+  .game-hud {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 12px;
+    margin-bottom: 20px;
+  }
+
+  .hud-card {
+    background: var(--white);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 14px 12px;
+    text-align: center;
+    box-shadow: 0 2px 10px rgba(63,46,77,0.06);
+    transition: border-color 0.3s;
+  }
+
+  .hud-label {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 4px;
+    display: block;
+  }
+
+  .hud-value {
+    font-family: 'Sora', sans-serif;
+    font-size: 34px;
+    font-weight: 800;
+    color: var(--dark);
+    line-height: 1;
+    transition: color 0.3s;
+  }
+
+  /* Timer turns orange then red */
+  .hud-card.timer-warn  { border-color: var(--orange); }
+  .hud-card.timer-warn  .hud-value { color: var(--orange); }
+  .hud-card.timer-crit  { border-color: var(--red); animation: shake 0.4s ease; }
+  .hud-card.timer-crit  .hud-value { color: var(--red); }
+
+  @keyframes shake {
+    0%,100% { transform: translateX(0); }
+    25%      { transform: translateX(-4px); }
+    75%      { transform: translateX(4px); }
+  }
+
+  /* ── PROGRESS BAR ── */
+  .progress-wrap {
+    margin-bottom: 18px;
+  }
+
+  .progress-meta {
+    display: flex;
+    justify-content: space-between;
+    font-size: 12px;
+    color: var(--muted);
+    font-weight: 600;
+    margin-bottom: 7px;
+  }
+
+  .progress-track {
+    height: 8px;
+    background: var(--border);
+    border-radius: 6px;
+    overflow: hidden;
+  }
+
+  .progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--accent), var(--secondary));
+    border-radius: 6px;
+    transition: width 0.4s ease;
+    width: 0%;
+  }
+
+  /* ── QUESTION CARD ── */
+  .question-card {
+    background: var(--white);
+    border: 1px solid var(--border);
+    border-radius: 18px;
+    padding: 28px 26px;
+    margin-bottom: 16px;
+    box-shadow: 0 4px 18px rgba(63,46,77,0.08);
+    min-height: 140px;
+    transition: border-color 0.3s;
+  }
+
+  .question-label {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 1.2px;
+    text-transform: uppercase;
+    color: var(--secondary);
+    margin-bottom: 12px;
+    display: block;
+  }
+
+  .question-text {
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--dark);
+    line-height: 1.5;
+    font-family: 'Sora', sans-serif;
+  }
+
+  /* ── ANSWER AREA ── */
+  .answer-card {
+    background: var(--white);
+    border: 1px solid var(--border);
+    border-radius: 18px;
+    padding: 22px 24px;
+    box-shadow: 0 4px 18px rgba(63,46,77,0.08);
+  }
+
+  .answer-label {
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--dark);
+    margin-bottom: 10px;
+    display: block;
+  }
+
+  #answer-input {
+    width: 100%;
+    padding: 13px 16px;
+    background: var(--surface);
+    border: 1.5px solid var(--border);
+    border-radius: 12px;
+    font-size: 14px;
+    color: var(--dark);
+    font-family: 'DM Sans', sans-serif;
+    resize: vertical;
+    outline: none;
+    transition: border-color 0.2s, box-shadow 0.2s;
+    min-height: 80px;
+  }
+
+  #answer-input:focus {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px rgba(142,111,177,0.12);
+    background: var(--white);
+  }
+
+  .answer-btns {
+    display: flex;
+    gap: 10px;
+    margin-top: 12px;
+  }
+
+  .btn-submit {
+    flex: 1;
+    padding: 13px;
+    background: linear-gradient(135deg, var(--accent), var(--secondary));
+    color: var(--white);
+    border-radius: 12px;
+    font-size: 14px;
+    font-weight: 700;
+    border: none;
+    cursor: pointer;
+    font-family: 'DM Sans', sans-serif;
+    transition: opacity 0.2s, transform 0.2s;
+    box-shadow: 0 4px 14px rgba(142,111,177,0.3);
+  }
+
+  .btn-submit:hover {
+    opacity: 0.9;
+    transform: translateY(-1px);
+  }
+
+  .btn-skip {
+    padding: 13px 20px;
+    background: var(--surface);
+    color: var(--muted);
+    border: 1.5px solid var(--border);
+    border-radius: 12px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    font-family: 'DM Sans', sans-serif;
+    transition: all 0.2s;
+  }
+
+  .btn-skip:hover {
+    border-color: var(--secondary);
+    color: var(--accent);
+  }
+
+  /* ── FEEDBACK OVERLAY ── */
+  .feedback-banner {
+    border-radius: 14px;
+    padding: 18px 22px;
+    text-align: center;
+    font-size: 15px;
+    font-weight: 700;
+    margin-bottom: 16px;
+    display: none;
+    font-family: 'Sora', sans-serif;
+    animation: fadeIn 0.25s ease;
+  }
+
+  .feedback-banner.correct {
+    background: #e8faf4;
+    border: 1.5px solid #b2f0e0;
+    color: var(--green);
+  }
+
+  .feedback-banner.wrong {
+    background: #ffe8e4;
+    border: 1.5px solid #ffc8be;
+    color: var(--red);
+  }
+
+  .feedback-banner.skipped {
+    background: #fff3e0;
+    border: 1.5px solid #ffe0b2;
+    color: var(--orange);
+  }
+
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(-8px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  /* ══════════════════════════
+     RESULTS SCREEN
+  ══════════════════════════ */
+  .results-screen {
+    display: none;
+    background: var(--white);
+    border: 1px solid var(--border);
+    border-radius: 22px;
+    padding: 46px 30px;
+    text-align: center;
+    box-shadow: 0 4px 24px rgba(63,46,77,0.10);
+  }
+
+  .results-emoji {
+    font-size: 64px;
+    display: block;
+    margin-bottom: 16px;
+    animation: bounce 0.8s ease;
+  }
+
+  @keyframes bounce {
+    0%   { transform: scale(0.5); opacity: 0; }
+    60%  { transform: scale(1.15); }
+    100% { transform: scale(1); opacity: 1; }
+  }
+
+  .results-screen h2 {
+    font-size: 28px;
+    font-weight: 800;
+    color: var(--dark);
+    margin-bottom: 8px;
+  }
+
+  .results-screen p {
+    color: var(--muted);
+    font-size: 14px;
+    margin-bottom: 32px;
+  }
+
+  .result-stats {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 14px;
+    margin-bottom: 32px;
+  }
+
+  .result-stat {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 18px 12px;
+  }
+
+  .result-stat .rs-label {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 8px;
+    display: block;
+  }
+
+  .result-stat .rs-value {
+    font-size: 30px;
+    font-weight: 800;
+    font-family: 'Sora', sans-serif;
+    color: var(--accent);
+  }
+
+  .result-btns {
+    display: flex;
+    gap: 12px;
+    justify-content: center;
+    flex-wrap: wrap;
+  }
+
+  .btn-play-again {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 13px 28px;
+    background: linear-gradient(135deg, var(--accent), var(--secondary));
+    color: var(--white);
+    border-radius: 12px;
+    font-size: 14px;
+    font-weight: 700;
+    text-decoration: none;
+    transition: opacity 0.2s, transform 0.2s;
+    box-shadow: 0 4px 14px rgba(142,111,177,0.3);
+  }
+
+  .btn-play-again:hover {
+    opacity: 0.9;
+    transform: translateY(-1px);
+  }
+
+  .btn-dashboard {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 12px 24px;
+    background: var(--surface);
+    color: var(--accent);
+    border: 1.5px solid var(--border);
+    border-radius: 12px;
+    font-size: 14px;
+    font-weight: 600;
+    text-decoration: none;
+    transition: all 0.2s;
+  }
+
+  .btn-dashboard:hover {
+    border-color: var(--secondary);
+    background: var(--bg);
+  }
+
+  @media (max-width: 480px) {
+    .game-hud       { grid-template-columns: repeat(3,1fr); }
+    .result-stats   { grid-template-columns: 1fr; }
+    .hud-value      { font-size: 26px; }
+  }
+</style>
+
+<div class="game-wrap">
+
+  <!-- Title row -->
+  <div class="game-title-row">
+    <div>
+      <h2>⚡ Timed Challenge</h2>
+      <p>Topic: <strong>{{ topic }}</strong></p>
+    </div>
+    <a href="/my-topics" class="back-btn">← Back</a>
+  </div>
+
+
+  <!-- ══════════════════════════
+       START SCREEN
+  ══════════════════════════ -->
+  <div class="start-screen" id="start-screen">
+    <span class="start-emoji">⚡</span>
+    <h2>Ready for the Challenge?</h2>
+    <p>
+      Answer <strong>{{ flashcards|length }} flashcards</strong> as fast as you can.<br>
+      You have <strong>20 seconds</strong> per card. Speed = bonus points!
+    </p>
+
+    <div class="start-info-row">
+      <span class="info-chip">🃏 {{ flashcards|length }} Cards</span>
+      <span class="info-chip">⏱️ 20s Per Card</span>
+    </div>
+
+    <button class="btn-start" onclick="startGame()">
+      ⚡ Start Challenge
+    </button>
+  </div>
+
+
+  <!-- ══════════════════════════
+       GAME SCREEN
+  ══════════════════════════ -->
+  <div class="game-screen" id="game-screen">
+
+    <!-- HUD -->
+    <div class="game-hud">
+      <div class="hud-card" id="timer-card">
+        <span class="hud-label">⏱️ Time</span>
+        <div class="hud-value" id="timer">20</div>
+      </div>
+
+      <div class="hud-card">
+        <span class="hud-label">⭐ Score</span>
+        <div class="hud-value" id="score">0</div>
+      </div>
+
+      <div class="hud-card">
+        <span class="hud-label">✅ Correct</span>
+        <div class="hud-value" id="correct-count">0</div>
+      </div>
+    </div>
+
+    <!-- Progress -->
+    <div class="progress-wrap">
+      <div class="progress-meta">
+        <span>Card <span id="current-card">1</span> of {{ flashcards|length }}</span>
+        <span id="progress-pct">0%</span>
+      </div>
+      <div class="progress-track">
+        <div class="progress-fill" id="progress-fill"></div>
+      </div>
+    </div>
+
+    <!-- Feedback banner -->
+    <div class="feedback-banner" id="feedback-banner"></div>
+
+    <!-- Question -->
+    <div class="question-card" id="question-card">
+      <span class="question-label">Question</span>
+      <div class="question-text" id="question-text">Loading...</div>
+    </div>
+
+    <!-- Answer -->
+    <div class="answer-card">
+      <span class="answer-label">Your Answer</span>
+      <textarea
+        id="answer-input"
+        placeholder="Type your answer here..."
+        rows="3"
+      ></textarea>
+      <div class="answer-btns">
+        <button class="btn-submit" onclick="submitAnswer()">
+          ✓ Submit Answer
+        </button>
+        <button class="btn-skip" onclick="skipCard()">
+          ⏭ Skip
+        </button>
+      </div>
+    </div>
+
+  </div>
+
+
+  <!-- ══════════════════════════
+       RESULTS SCREEN
+  ══════════════════════════ -->
+  <div class="results-screen" id="results-screen">
+    <span class="results-emoji">🎉</span>
+    <h2>Challenge Complete!</h2>
+    <p>Here's how you performed</p>
+
+    <div class="result-stats">
+      <div class="result-stat">
+        <span class="rs-label">⭐ Score</span>
+        <div class="rs-value" id="final-score">0</div>
+      </div>
+      <div class="result-stat">
+        <span class="rs-label">🎯 Accuracy</span>
+        <div class="rs-value" id="accuracy">0%</div>
+      </div>
+      <div class="result-stat">
+        <span class="rs-label">⏱️ Time</span>
+        <div class="rs-value" id="total-time">0s</div>
+      </div>
+    </div>
+
+    <div class="result-btns">
+      <a href="{{ url_for('flashcard.timed_challenge_file', file_id=file_id) }}"
+         class="btn-play-again">
+        🔄 Play Again
+      </a>
+      <a href="{{ url_for('dashboard') }}"
+         class="btn-dashboard">
+        🏠 Dashboard
+      </a>
+    </div>
+  </div>
+
+</div><!-- end .game-wrap -->
+
+
+<script>
+const flashcards  = {{ flashcards|tojson }};
+const sessionId   = {{ session_id }};
+let currentIndex  = 0;
+let correctCount  = 0;
+let totalScore    = 0;
+let cardTimer     = 20;
+let timerInterval;
+let gameStartTime;
+let answering     = true;
+
+/* ── START ── */
+function startGame() {
+  document.getElementById('start-screen').style.display  = 'none';
+  document.getElementById('game-screen').style.display   = 'block';
+  gameStartTime = Date.now();
+  loadCard();
+}
+
+/* ── LOAD CARD ── */
+function loadCard() {
+  if (currentIndex >= flashcards.length) { endGame(); return; }
+
+  answering = true;
+  cardTimer = 20;
+
+  const card = flashcards[currentIndex];
+  document.getElementById('question-text').textContent = card.question;
+  document.getElementById('answer-input').value = '';
+  document.getElementById('feedback-banner').style.display = 'none';
+
+  // reset timer card style
+  const tc = document.getElementById('timer-card');
+  tc.classList.remove('timer-warn','timer-crit');
+
+  // focus input
+  setTimeout(() => document.getElementById('answer-input').focus(), 50);
+
+  updateHUD();
+  startTimer();
+}
+
+/* ── TIMER ── */
+function startTimer() {
+  clearInterval(timerInterval);
+  document.getElementById('timer').textContent = cardTimer;
+
+  timerInterval = setInterval(() => {
+    cardTimer--;
+    document.getElementById('timer').textContent = cardTimer;
+
+    const tc = document.getElementById('timer-card');
+    tc.classList.remove('timer-warn','timer-crit');
+    if (cardTimer <= 10 && cardTimer > 5) tc.classList.add('timer-warn');
+    if (cardTimer <= 5)                   tc.classList.add('timer-crit');
+
+    if (cardTimer <= 0) {
+      clearInterval(timerInterval);
+      skipCard();
+    }
+  }, 1000);
+}
+
+/* ── SUBMIT ── */
+function submitAnswer() {
+  if (!answering) return;
+  answering = false;
+  clearInterval(timerInterval);
+
+  const userAns    = document.getElementById('answer-input').value.trim().toLowerCase();
+  const correctAns = flashcards[currentIndex].answer.toLowerCase();
+
+  if (!userAns) { skipCard(); return; }
+
+  const isCorrect = userAns.includes(correctAns) || correctAns.includes(userAns);
+
+  if (isCorrect) {
+    correctCount++;
+    const bonus  = Math.max(0, cardTimer) * 5;
+    const points = 100 + bonus;
+    totalScore  += points;
+    showFeedback('correct', `✅ Correct! +${points} pts ${bonus > 0 ? '(+' + bonus + ' speed bonus!)' : ''}`);
+  } else {
+    showFeedback('wrong', `❌ Wrong — Answer: ${flashcards[currentIndex].answer}`);
+  }
+
+  updateHUD();
+  setTimeout(() => { currentIndex++; loadCard(); }, 1600);
+}
+
+/* ── SKIP ── */
+function skipCard() {
+  if (!answering) return;
+  answering = false;
+  clearInterval(timerInterval);
+  showFeedback('skipped', `⏭ Skipped — Answer: ${flashcards[currentIndex].answer}`);
+  setTimeout(() => { currentIndex++; loadCard(); }, 1200);
+}
+
+/* ── FEEDBACK ── */
+function showFeedback(type, msg) {
+  const el = document.getElementById('feedback-banner');
+  el.className    = 'feedback-banner ' + type;
+  el.textContent  = msg;
+  el.style.display = 'block';
+}
+
+/* ── HUD ── */
+function updateHUD() {
+  const pct = Math.round(((currentIndex) / flashcards.length) * 100);
+  document.getElementById('progress-fill').style.width  = pct + '%';
+  document.getElementById('progress-pct').textContent   = pct + '%';
+  document.getElementById('current-card').textContent   = Math.min(currentIndex + 1, flashcards.length);
+  document.getElementById('correct-count').textContent  = correctCount;
+  document.getElementById('score').textContent          = Math.round(totalScore);
+}
+
+/* ── END GAME ── */
+async function endGame() {
+  clearInterval(timerInterval);
+
+  const totalTime = Math.round((Date.now() - gameStartTime) / 1000);
+  const accuracy  = flashcards.length > 0
+    ? Math.round((correctCount / flashcards.length) * 100) : 0;
+
+  try {
+    const res  = await fetch('/flashcard/game/timed-challenge/submit', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        session_id:      sessionId,
+        correct_answers: correctCount,
+        time_taken:      totalTime
+      })
+    });
+    const data = await res.json();
+    if (data.score) totalScore = data.score;
+  } catch(e) { console.error(e); }
+
+  document.getElementById('game-screen').style.display    = 'none';
+  document.getElementById('results-screen').style.display = 'block';
+  document.getElementById('final-score').textContent = Math.round(totalScore);
+  document.getElementById('accuracy').textContent    = accuracy + '%';
+  document.getElementById('total-time').textContent  = totalTime + 's';
+}
+
+/* ── ENTER to submit ── */
+document.addEventListener('keydown', function(e) {
+  if (e.key === 'Enter' && !e.shiftKey &&
+      document.getElementById('game-screen').style.display !== 'none') {
+    e.preventDefault();
+    submitAnswer();
+  }
+});
+</script>
+
+{% endblock %}

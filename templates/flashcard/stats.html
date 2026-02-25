@@ -1,0 +1,400 @@
+{% extends "base.html" %}
+{% block title %}Statistics{% endblock %}
+{% block content %}
+
+<style>
+  :root {
+    --bg:        #f4f3ff;
+    --surface:   #ffffff;
+    --border:    #ece9ff;
+    --purple:    #6c5ce7;
+    --purple-lt: #a29bfe;
+    --green:     #00b894;
+    --orange:    #fd9644;
+    --red:       #e17055;
+    --text:      #1e1b3a;
+    --muted:     #8b87a8;
+    --radius:    16px;
+    --shadow:    0 4px 24px rgba(108,92,231,0.08);
+  }
+
+  body { background: var(--bg); }
+
+  .stats-wrapper {
+    max-width: 960px;
+    margin: 0 auto;
+    padding: 2rem 1.5rem 4rem;
+    font-family: 'Segoe UI', sans-serif;
+    color: var(--text);
+  }
+
+  /* ── Top bar ── */
+  .stats-topbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 2rem;
+  }
+
+  .stats-back {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    color: var(--purple);
+    font-size: 0.88rem;
+    font-weight: 600;
+    text-decoration: none;
+    transition: gap .2s;
+  }
+  .stats-back:hover { gap: 10px; }
+
+  .stats-title {
+    font-size: 1.8rem;
+    font-weight: 800;
+    margin: 0;
+  }
+
+  /* ── KPI Grid ── */
+  .kpi-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 1rem;
+    margin-bottom: 2rem;
+  }
+
+  .kpi-card {
+    background: var(--surface);
+    border: 1.5px solid var(--border);
+    border-radius: var(--radius);
+    padding: 1.4rem 1.5rem;
+    box-shadow: var(--shadow);
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    transition: transform .2s, box-shadow .2s;
+    animation: fadeUp .4s ease both;
+  }
+  .kpi-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 32px rgba(108,92,231,0.13);
+  }
+  .kpi-card:nth-child(2) { animation-delay: .07s; }
+  .kpi-card:nth-child(3) { animation-delay: .14s; }
+  .kpi-card:nth-child(4) { animation-delay: .21s; }
+
+  .kpi-icon {
+    width: 40px; height: 40px;
+    border-radius: 12px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1.2rem;
+    margin-bottom: 4px;
+  }
+  .kpi-icon.purple { background: #ede9ff; }
+  .kpi-icon.green  { background: #e0faf4; }
+  .kpi-icon.orange { background: #fff3e0; }
+  .kpi-icon.blue   { background: #e7f5ff; }
+
+  .kpi-val {
+    font-size: 2rem;
+    font-weight: 800;
+    color: var(--purple);
+    line-height: 1;
+  }
+  .kpi-label {
+    font-size: 0.78rem;
+    color: var(--muted);
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: .05em;
+  }
+
+  /* ── Section card ── */
+  .section-card {
+    background: var(--surface);
+    border: 1.5px solid var(--border);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    overflow: hidden;
+    margin-bottom: 1.5rem;
+    animation: fadeUp .4s .2s ease both;
+  }
+
+  .section-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 1.1rem 1.6rem;
+    border-bottom: 1.5px solid var(--border);
+    background: var(--bg);
+  }
+
+  .section-header h2 {
+    font-size: 0.95rem;
+    font-weight: 700;
+    margin: 0;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: var(--text);
+  }
+
+  /* ── Table ── */
+  .stats-table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+
+  .stats-table th {
+    padding: 0.8rem 1.6rem;
+    font-size: 0.72rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .07em;
+    color: var(--muted);
+    text-align: left;
+    background: var(--bg);
+    border-bottom: 1.5px solid var(--border);
+  }
+
+  .stats-table td {
+    padding: 1rem 1.6rem;
+    font-size: 0.9rem;
+    color: var(--text);
+    border-bottom: 1.5px solid var(--border);
+    vertical-align: middle;
+  }
+
+  .stats-table tbody tr:last-child td { border-bottom: none; }
+
+  .stats-table tbody tr {
+    transition: background .15s;
+  }
+  .stats-table tbody tr:hover { background: #f9f8ff; }
+
+  /* ── Mode tag ── */
+  .mode-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 0.8rem;
+    font-weight: 600;
+  }
+  .mode-tag.flip   { background: #e7f5ff; color: #1971c2; }
+  .mode-tag.timed  { background: #fff3bf; color: #e67700; }
+  .mode-tag.match  { background: #ebfbee; color: #2f9e44; }
+
+  /* ── Level badge ── */
+  .level-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 0.8rem;
+    font-weight: 700;
+  }
+  .level-badge.master   { background: #d4f5ec; color: #00a67e; }
+  .level-badge.advanced { background: #e7f5ff; color: #1971c2; }
+  .level-badge.inter    { background: #fff3e0; color: #e08000; }
+  .level-badge.beginner { background: #f3f0ff; color: #6c5ce7; }
+
+  /* ── Accuracy bar ── */
+  .acc-bar-wrap {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .acc-bar {
+    flex: 1;
+    height: 6px;
+    background: var(--border);
+    border-radius: 999px;
+    overflow: hidden;
+    min-width: 60px;
+  }
+  .acc-bar-fill {
+    height: 100%;
+    border-radius: 999px;
+  }
+  .acc-fill-high { background: linear-gradient(90deg, #00b894, #55efc4); }
+  .acc-fill-mid  { background: linear-gradient(90deg, #fd9644, #ffeaa7); }
+  .acc-fill-low  { background: linear-gradient(90deg, #a29bfe, #6c5ce7); }
+
+  .acc-val {
+    font-size: 0.85rem;
+    font-weight: 700;
+    min-width: 38px;
+    text-align: right;
+  }
+
+  /* ── Empty ── */
+  .empty-state {
+    text-align: center;
+    padding: 3rem 2rem;
+    color: var(--muted);
+  }
+  .empty-state .e-ico {
+    font-size: 3rem;
+    display: block;
+    margin-bottom: .8rem;
+    opacity: .5;
+  }
+  .empty-state p { font-size: 0.9rem; margin: 0; }
+
+  /* ── Score pill ── */
+  .score-num {
+    font-weight: 700;
+    color: var(--purple);
+    font-size: 1rem;
+  }
+
+  /* ── Animation ── */
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(16px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+</style>
+
+<div class="stats-wrapper">
+
+  <!-- Top bar -->
+  <div class="stats-topbar">
+    <a href="{{ url_for('dashboard') }}" class="stats-back">← Back to Dashboard</a>
+  </div>
+  <h1 class="stats-title" style="margin-bottom:1.8rem;">📊 Your Statistics</h1>
+
+  <!-- KPI Row -->
+  <div class="kpi-grid">
+    <div class="kpi-card">
+      <div class="kpi-icon purple">🎮</div>
+      <div class="kpi-val">{{ overall.total_games or 0 }}</div>
+      <div class="kpi-label">Games Played</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-icon green">⭐</div>
+      <div class="kpi-val">{{ (overall.avg_score or 0) | round | int }}</div>
+      <div class="kpi-label">Avg Score</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-icon orange">✅</div>
+      <div class="kpi-val">{{ overall.total_correct or 0 }}</div>
+      <div class="kpi-label">Correct Answers</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-icon blue">🎯</div>
+      <div class="kpi-val">
+        {% if overall.total_attempted and overall.total_attempted > 0 %}
+          {{ ((overall.total_correct / overall.total_attempted) * 100) | round | int }}%
+        {% else %}
+          0%
+        {% endif %}
+      </div>
+      <div class="kpi-label">Accuracy</div>
+    </div>
+  </div>
+
+  <!-- By Game Mode -->
+  {% if by_mode %}
+  <div class="section-card">
+    <div class="section-header">
+      <h2>🕹️ Performance by Game Mode</h2>
+    </div>
+    <table class="stats-table">
+      <thead>
+        <tr>
+          <th>Mode</th>
+          <th>Games</th>
+          <th>Avg Score</th>
+          <th>Best Score</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for mode in by_mode %}
+        <tr>
+          <td>
+            {% if mode.game_mode == 'flip_answer' %}
+              <span class="mode-tag flip">🔄 Flip & Answer</span>
+            {% elif mode.game_mode == 'timed_challenge' %}
+              <span class="mode-tag timed">⚡ Timed Challenge</span>
+            {% else %}
+              <span class="mode-tag match">🧩 Match Game</span>
+            {% endif %}
+          </td>
+          <td><span class="score-num">{{ mode.games_played }}</span></td>
+          <td><span class="score-num">{{ (mode.avg_score or 0) | round | int }}</span></td>
+          <td><span class="score-num">{{ (mode.best_score or 0) | round | int }}</span></td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% endif %}
+
+  <!-- By Topic -->
+  {% if by_topic %}
+  <div class="section-card">
+    <div class="section-header">
+      <h2>📚 Performance by Topic</h2>
+    </div>
+    <table class="stats-table">
+      <thead>
+        <tr>
+          <th>Topic</th>
+          <th>Games</th>
+          <th>Accuracy</th>
+          <th>Level</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for topic in by_topic %}
+        {% set acc = (topic.accuracy or 0) | round | int %}
+        <tr>
+          <td><strong>{{ topic.topic }}</strong></td>
+          <td><span class="score-num">{{ topic.games_played }}</span></td>
+          <td>
+            <div class="acc-bar-wrap">
+              <div class="acc-bar">
+                <div class="acc-bar-fill
+                  {% if acc >= 75 %}acc-fill-high
+                  {% elif acc >= 50 %}acc-fill-mid
+                  {% else %}acc-fill-low{% endif %}"
+                  style="width: {{ acc }}%">
+                </div>
+              </div>
+              <span class="acc-val">{{ acc }}%</span>
+            </div>
+          </td>
+          <td>
+            {% if acc >= 90 %}
+              <span class="level-badge master">🌟 Master</span>
+            {% elif acc >= 75 %}
+              <span class="level-badge advanced">💪 Advanced</span>
+            {% elif acc >= 60 %}
+              <span class="level-badge inter">📈 Intermediate</span>
+            {% else %}
+              <span class="level-badge beginner">🌱 Beginner</span>
+            {% endif %}
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  {% else %}
+  <div class="section-card">
+    <div class="section-header">
+      <h2>📚 Performance by Topic</h2>
+    </div>
+    <div class="empty-state">
+      <span class="e-ico">🎮</span>
+      <p>Play some games to see your topic performance here!</p>
+    </div>
+  </div>
+  {% endif %}
+
+</div>
+
+{% endblock %}

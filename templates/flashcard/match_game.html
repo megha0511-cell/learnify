@@ -1,0 +1,790 @@
+{% extends "base.html" %}
+{% block title %}Match Game{% endblock %}
+{% block content %}
+
+<style>
+  :root {
+    --bg:        #EDE4F0;
+    --primary:   #CBB4D4;
+    --secondary: #A88BC1;
+    --accent:    #8E6FB1;
+    --dark:      #3F2E4D;
+    --white:     #ffffff;
+    --border:    #ddd4e8;
+    --muted:     #9b87a8;
+    --surface:   #f7f2fa;
+    --green:     #00b894;
+    --red:       #e17055;
+    --orange:    #fd9644;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: var(--bg); font-family: 'DM Sans', sans-serif; }
+  h1,h2,h3,h4 { font-family: 'Sora', sans-serif; }
+
+  .game-wrap {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 0 16px 60px;
+  }
+
+  /* ── TITLE ROW ── */
+  .game-title-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 24px;
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+
+  .game-title-row h2 {
+    font-size: 22px;
+    font-weight: 800;
+    color: var(--dark);
+    margin: 0;
+  }
+
+  .game-title-row p {
+    font-size: 13px;
+    color: var(--muted);
+    margin: 4px 0 0;
+  }
+
+  .back-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 9px 16px;
+    background: var(--white);
+    border: 1.5px solid var(--border);
+    border-radius: 10px;
+    color: var(--accent);
+    font-size: 13px;
+    font-weight: 600;
+    text-decoration: none;
+    transition: all 0.2s;
+    flex-shrink: 0;
+  }
+
+  .back-btn:hover {
+    background: var(--surface);
+    border-color: var(--secondary);
+  }
+
+  /* ══════════════════════════
+     START SCREEN
+  ══════════════════════════ */
+  .start-screen {
+    background: var(--white);
+    border: 1px solid var(--border);
+    border-radius: 22px;
+    padding: 52px 30px;
+    text-align: center;
+    box-shadow: 0 4px 24px rgba(63,46,77,0.10);
+  }
+
+  .start-emoji {
+    font-size: 68px;
+    display: block;
+    margin-bottom: 20px;
+    animation: float 2s ease-in-out infinite;
+  }
+
+  @keyframes float {
+    0%,100% { transform: translateY(0); }
+    50%      { transform: translateY(-10px); }
+  }
+
+  .start-screen h2 {
+    font-size: 28px;
+    font-weight: 800;
+    color: var(--dark);
+    margin-bottom: 12px;
+  }
+
+  .start-screen p {
+    font-size: 15px;
+    color: var(--muted);
+    margin-bottom: 30px;
+    line-height: 1.6;
+  }
+
+  .start-info-row {
+    display: flex;
+    justify-content: center;
+    gap: 12px;
+    margin-bottom: 32px;
+    flex-wrap: wrap;
+  }
+
+  .info-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 16px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--accent);
+  }
+
+  .btn-start {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    padding: 16px 42px;
+    background: linear-gradient(135deg, var(--accent), var(--secondary));
+    color: var(--white);
+    border-radius: 14px;
+    font-size: 16px;
+    font-weight: 800;
+    border: none;
+    cursor: pointer;
+    font-family: 'Sora', sans-serif;
+    transition: transform 0.2s, box-shadow 0.2s;
+    box-shadow: 0 6px 22px rgba(142,111,177,0.4);
+  }
+
+  .btn-start:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 30px rgba(142,111,177,0.5);
+  }
+
+  /* ══════════════════════════
+     GAME SCREEN
+  ══════════════════════════ */
+  .game-screen { display: none; }
+
+  /* ── HUD ── */
+  .game-hud {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+    margin-bottom: 20px;
+  }
+
+  .hud-card {
+    background: var(--white);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 14px 12px;
+    text-align: center;
+    box-shadow: 0 2px 10px rgba(63,46,77,0.06);
+  }
+
+  .hud-label {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 4px;
+    display: block;
+  }
+
+  .hud-value {
+    font-family: 'Sora', sans-serif;
+    font-size: 30px;
+    font-weight: 800;
+    color: var(--dark);
+    line-height: 1;
+  }
+
+  /* Progress */
+  .progress-wrap {
+    margin-bottom: 20px;
+  }
+
+  .progress-meta {
+    display: flex;
+    justify-content: space-between;
+    font-size: 12px;
+    color: var(--muted);
+    font-weight: 600;
+    margin-bottom: 7px;
+  }
+
+  .progress-track {
+    height: 8px;
+    background: var(--border);
+    border-radius: 6px;
+    overflow: hidden;
+  }
+
+  .progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--accent), var(--secondary));
+    border-radius: 6px;
+    transition: width 0.5s ease;
+    width: 0%;
+  }
+
+  /* ── MATCH INSTRUCTION ── */
+  .match-instruction {
+    text-align: center;
+    font-size: 13px;
+    color: var(--muted);
+    font-weight: 500;
+    margin-bottom: 18px;
+    padding: 10px 16px;
+    background: var(--surface);
+    border-radius: 10px;
+    border: 1px solid var(--border);
+  }
+
+  /* ── TWO COLUMNS ── */
+  .match-columns {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+  }
+
+  .match-col-header {
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    color: var(--muted);
+    text-align: center;
+    margin-bottom: 12px;
+    padding: 8px;
+    background: var(--surface);
+    border-radius: 8px;
+    border: 1px solid var(--border);
+  }
+
+  .matching-column {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  /* ── MATCH CARD ── */
+  .match-card {
+    background: var(--white);
+    border: 2px solid var(--border);
+    border-radius: 13px;
+    padding: 14px 16px;
+    cursor: pointer;
+    transition: all 0.22s ease;
+    font-size: 13.5px;
+    font-weight: 500;
+    color: var(--dark);
+    line-height: 1.5;
+    box-shadow: 0 2px 8px rgba(63,46,77,0.05);
+    position: relative;
+    user-select: none;
+  }
+
+  .match-card:hover:not(.matched):not(.wrong) {
+    border-color: var(--secondary);
+    background: #f5eeff;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 18px rgba(142,111,177,0.15);
+  }
+
+  .match-card.selected {
+    border-color: var(--accent);
+    background: #ede0f5;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(142,111,177,0.25);
+  }
+
+  .match-card.selected::after {
+    content: '●';
+    position: absolute;
+    top: 10px; right: 12px;
+    font-size: 10px;
+    color: var(--accent);
+  }
+
+  .match-card.matched {
+    border-color: var(--green);
+    background: #e8faf4;
+    cursor: not-allowed;
+    opacity: 0.85;
+  }
+
+  .match-card.matched::before {
+    content: '✓';
+    font-weight: 800;
+    color: var(--green);
+    margin-right: 8px;
+  }
+
+  .match-card.wrong {
+    border-color: var(--red);
+    background: #ffe8e4;
+    animation: shake 0.4s ease;
+  }
+
+  @keyframes shake {
+    0%,100% { transform: translateX(0); }
+    20%      { transform: translateX(-8px); }
+    40%      { transform: translateX(8px); }
+    60%      { transform: translateX(-5px); }
+    80%      { transform: translateX(5px); }
+  }
+
+  /* ── COMBO TOAST ── */
+  .combo-toast {
+    position: fixed;
+    top: 80px;
+    left: 50%;
+    transform: translateX(-50%) translateY(-20px);
+    background: linear-gradient(135deg, var(--accent), var(--secondary));
+    color: var(--white);
+    padding: 12px 28px;
+    border-radius: 30px;
+    font-size: 15px;
+    font-weight: 700;
+    font-family: 'Sora', sans-serif;
+    box-shadow: 0 8px 24px rgba(142,111,177,0.4);
+    opacity: 0;
+    transition: opacity 0.3s, transform 0.3s;
+    z-index: 999;
+    pointer-events: none;
+  }
+
+  .combo-toast.show {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
+
+  /* ══════════════════════════
+     RESULTS SCREEN
+  ══════════════════════════ */
+  .results-screen {
+    display: none;
+    background: var(--white);
+    border: 1px solid var(--border);
+    border-radius: 22px;
+    padding: 48px 30px;
+    text-align: center;
+    box-shadow: 0 4px 24px rgba(63,46,77,0.10);
+  }
+
+  .results-emoji {
+    font-size: 64px;
+    display: block;
+    margin-bottom: 16px;
+    animation: bounce 0.8s ease;
+  }
+
+  @keyframes bounce {
+    0%   { transform: scale(0.5); opacity: 0; }
+    60%  { transform: scale(1.15); }
+    100% { transform: scale(1); opacity: 1; }
+  }
+
+  .results-screen h2 {
+    font-size: 28px;
+    font-weight: 800;
+    color: var(--dark);
+    margin-bottom: 8px;
+  }
+
+  .results-screen > p {
+    color: var(--muted);
+    font-size: 14px;
+    margin-bottom: 30px;
+  }
+
+  .result-stats {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 14px;
+    margin-bottom: 30px;
+  }
+
+  .result-stat {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 18px 12px;
+  }
+
+  .rs-label {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 8px;
+    display: block;
+  }
+
+  .rs-value {
+    font-size: 30px;
+    font-weight: 800;
+    font-family: 'Sora', sans-serif;
+    color: var(--accent);
+  }
+
+  .result-btns {
+    display: flex;
+    gap: 12px;
+    justify-content: center;
+    flex-wrap: wrap;
+  }
+
+  .btn-play-again {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 13px 28px;
+    background: linear-gradient(135deg, var(--accent), var(--secondary));
+    color: var(--white);
+    border-radius: 12px;
+    font-size: 14px;
+    font-weight: 700;
+    text-decoration: none;
+    transition: opacity 0.2s, transform 0.2s;
+    box-shadow: 0 4px 14px rgba(142,111,177,0.3);
+  }
+
+  .btn-play-again:hover {
+    opacity: 0.9;
+    transform: translateY(-1px);
+  }
+
+  .btn-dashboard {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 12px 24px;
+    background: var(--surface);
+    color: var(--accent);
+    border: 1.5px solid var(--border);
+    border-radius: 12px;
+    font-size: 14px;
+    font-weight: 600;
+    text-decoration: none;
+    transition: all 0.2s;
+  }
+
+  .btn-dashboard:hover {
+    border-color: var(--secondary);
+    background: var(--bg);
+  }
+
+  @media (max-width: 560px) {
+    .match-columns  { grid-template-columns: 1fr; }
+    .game-hud       { grid-template-columns: repeat(3,1fr); }
+    .result-stats   { grid-template-columns: 1fr; }
+    .hud-value      { font-size: 22px; }
+  }
+</style>
+
+<!-- Combo Toast -->
+<div class="combo-toast" id="comboToast"></div>
+
+<div class="game-wrap">
+
+  <!-- Title row -->
+  <div class="game-title-row">
+    <div>
+      <h2>🧩 Match Game</h2>
+      <p>Topic: <strong>{{ topic }}</strong></p>
+    </div>
+    <a href="/my-topics" class="back-btn">← Back</a>
+  </div>
+
+
+  <!-- ══════════════════════════
+       START SCREEN
+  ══════════════════════════ -->
+  <div class="start-screen" id="start-screen">
+    <span class="start-emoji">🧩</span>
+    <h2>Match the Terms!</h2>
+    <p>
+      Click a <strong>term</strong> on the left, then click its
+      <strong>matching meaning</strong> on the right.<br>
+      Match all {{ flashcards|length }} pairs as fast as you can!
+    </p>
+
+    <div class="start-info-row">
+      <span class="info-chip">🧩 {{ flashcards|length }} Pairs</span>
+      <span class="info-chip">⏱️ Timed</span>
+      <span class="info-chip">⭐ Speed Bonus</span>
+    </div>
+
+    <button class="btn-start" onclick="startGame()">
+      🧩 Start Matching
+    </button>
+  </div>
+
+
+  <!-- ══════════════════════════
+       GAME SCREEN
+  ══════════════════════════ -->
+  <div class="game-screen" id="game-screen">
+
+    <!-- HUD -->
+    <div class="game-hud">
+      <div class="hud-card">
+        <span class="hud-label">⏱️ Time</span>
+        <div class="hud-value" id="timer">0</div>
+      </div>
+      <div class="hud-card">
+        <span class="hud-label">🧩 Matched</span>
+        <div class="hud-value" id="matches">0</div>
+      </div>
+      <div class="hud-card">
+        <span class="hud-label">⭐ Score</span>
+        <div class="hud-value" id="score">0</div>
+      </div>
+    </div>
+
+    <!-- Progress -->
+    <div class="progress-wrap">
+      <div class="progress-meta">
+        <span>Progress</span>
+        <span><span id="matches-text">0</span> / {{ flashcards|length }} matched</span>
+      </div>
+      <div class="progress-track">
+        <div class="progress-fill" id="progress-fill"></div>
+      </div>
+    </div>
+
+    <!-- Instruction -->
+    <div class="match-instruction" id="instruction">
+      👆 Select a <strong>Term</strong> on the left to get started
+    </div>
+
+    <!-- Match columns -->
+    <div class="match-columns">
+      <div>
+        <div class="match-col-header">📝 Terms</div>
+        <div class="matching-column" id="terms-column"></div>
+      </div>
+      <div>
+        <div class="match-col-header">💡 Meanings</div>
+        <div class="matching-column" id="meanings-column"></div>
+      </div>
+    </div>
+
+  </div>
+
+
+  <!-- ══════════════════════════
+       RESULTS SCREEN
+  ══════════════════════════ -->
+  <div class="results-screen" id="results-screen">
+    <span class="results-emoji">🎉</span>
+    <h2>Perfect Match!</h2>
+    <p>You matched all the terms successfully!</p>
+
+    <div class="result-stats">
+      <div class="result-stat">
+        <span class="rs-label">⭐ Score</span>
+        <div class="rs-value" id="final-score">0</div>
+      </div>
+      <div class="result-stat">
+        <span class="rs-label">🧩 Matches</span>
+        <div class="rs-value" id="final-matches">0</div>
+      </div>
+      <div class="result-stat">
+        <span class="rs-label">⏱️ Time</span>
+        <div class="rs-value" id="final-time">0s</div>
+      </div>
+    </div>
+
+    <div class="result-btns">
+      <a href="{{ url_for('flashcard.match_game_file', file_id=file_id) }}"
+         class="btn-play-again">
+        🔄 Play Again
+      </a>
+      <a href="{{ url_for('dashboard') }}"
+         class="btn-dashboard">
+        🏠 Dashboard
+      </a>
+    </div>
+  </div>
+
+</div><!-- end .game-wrap -->
+
+
+<script>
+  const flashcards    = {{ flashcards|tojson }};
+  const sessionId     = {{ session_id }};
+  let selectedTerm    = null;
+  let selectedMeaning = null;
+  let matchesCount    = 0;
+  let totalScore      = 0;
+  let gameTimer       = 0;
+  let timerInterval;
+  let consecutiveCorrect = 0;
+
+  /* ── START ── */
+  function startGame() {
+    document.getElementById('start-screen').style.display = 'none';
+    document.getElementById('game-screen').style.display  = 'block';
+    setupGame();
+    startTimer();
+  }
+
+  /* ── SETUP ── */
+  function setupGame() {
+    const termsCol    = document.getElementById('terms-column');
+    const meaningsCol = document.getElementById('meanings-column');
+
+    const terms    = [...flashcards];
+    const meanings = [...flashcards].sort(() => Math.random() - 0.5);
+
+    terms.forEach(card => termsCol.appendChild(
+      createCard('term', card.question, card.id)
+    ));
+    meanings.forEach(card => meaningsCol.appendChild(
+      createCard('meaning', card.answer, card.id)
+    ));
+  }
+
+  /* ── CREATE CARD ── */
+  function createCard(type, text, cardId) {
+    const el = document.createElement('div');
+    el.className        = 'match-card';
+    el.dataset.type     = type;
+    el.dataset.cardId   = cardId;
+    el.textContent      = text;
+    el.addEventListener('click', () => selectCard(el, type, cardId));
+    return el;
+  }
+
+  /* ── SELECT ── */
+  function selectCard(el, type, cardId) {
+    if (el.classList.contains('matched')) return;
+
+    if (type === 'term') {
+      if (selectedTerm) selectedTerm.classList.remove('selected');
+      selectedTerm = el;
+      el.classList.add('selected');
+      setInstruction('Now select the matching <strong>Meaning</strong> on the right 👉');
+    } else {
+      if (selectedMeaning) selectedMeaning.classList.remove('selected');
+      selectedMeaning = el;
+      el.classList.add('selected');
+    }
+
+    if (selectedTerm && selectedMeaning) checkMatch();
+  }
+
+  /* ── CHECK MATCH ── */
+  function checkMatch() {
+    const tId = selectedTerm.dataset.cardId;
+    const mId = selectedMeaning.dataset.cardId;
+
+    if (tId === mId) {
+      /* ✅ Correct */
+      selectedTerm.classList.remove('selected');
+      selectedTerm.classList.add('matched');
+      selectedMeaning.classList.remove('selected');
+      selectedMeaning.classList.add('matched');
+
+      matchesCount++;
+      consecutiveCorrect++;
+
+      const bonus  = Math.max(0, 50 - (gameTimer * 0.3));
+      const points = 50 + Math.round(bonus);
+      totalScore  += points;
+
+      updateHUD();
+
+      /* Combo toast */
+      if (consecutiveCorrect >= 2) {
+        showToast(`🔥 ${consecutiveCorrect}x Combo! +${points} pts`);
+      } else {
+        showToast(`✅ Match! +${points} pts`);
+      }
+
+      setInstruction('✅ Correct! Keep going!');
+
+      if (matchesCount === flashcards.length) {
+        setTimeout(endGame, 900);
+      } else {
+        setTimeout(() => setInstruction('Select a <strong>Term</strong> on the left 👆'), 1200);
+      }
+
+    } else {
+      /* ❌ Wrong */
+      selectedTerm.classList.add('wrong');
+      selectedMeaning.classList.add('wrong');
+      consecutiveCorrect = 0;
+      showToast('❌ Not a match — try again!');
+      setInstruction('❌ Wrong match — try again!');
+
+      setTimeout(() => {
+        selectedTerm.classList.remove('selected','wrong');
+        selectedMeaning.classList.remove('selected','wrong');
+        selectedTerm    = null;
+        selectedMeaning = null;
+        setInstruction('Select a <strong>Term</strong> on the left 👆');
+      }, 600);
+
+      return;
+    }
+
+    selectedTerm    = null;
+    selectedMeaning = null;
+  }
+
+  /* ── TIMER ── */
+  function startTimer() {
+    timerInterval = setInterval(() => {
+      gameTimer++;
+      document.getElementById('timer').textContent = gameTimer;
+    }, 1000);
+  }
+
+  /* ── HUD ── */
+  function updateHUD() {
+    const pct = Math.round((matchesCount / flashcards.length) * 100);
+    document.getElementById('matches').textContent      = matchesCount;
+    document.getElementById('matches-text').textContent = matchesCount;
+    document.getElementById('score').textContent        = Math.round(totalScore);
+    document.getElementById('progress-fill').style.width = pct + '%';
+  }
+
+  /* ── INSTRUCTION ── */
+  function setInstruction(html) {
+    document.getElementById('instruction').innerHTML = html;
+  }
+
+  /* ── TOAST ── */
+  function showToast(msg) {
+    const toast = document.getElementById('comboToast');
+    toast.textContent = msg;
+    toast.classList.add('show');
+    setTimeout(() => toast.classList.remove('show'), 1400);
+  }
+
+  /* ── END GAME ── */
+  async function endGame() {
+    clearInterval(timerInterval);
+
+    try {
+      const res  = await fetch('/flashcard/game/match/submit', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          session_id: sessionId,
+          matches:    matchesCount,
+          time_taken: gameTimer
+        })
+      });
+      const data = await res.json();
+      if (data.score) totalScore = data.score;
+    } catch(e) { console.error(e); }
+
+    document.getElementById('game-screen').style.display    = 'none';
+    document.getElementById('results-screen').style.display = 'block';
+    document.getElementById('final-score').textContent   = Math.round(totalScore);
+    document.getElementById('final-matches').textContent = matchesCount;
+    document.getElementById('final-time').textContent    = gameTimer + 's';
+  }
+</script>
+
+{% endblock %}

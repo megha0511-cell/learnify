@@ -1,0 +1,426 @@
+{% extends "base.html" %}
+{% block content %}
+
+<style>
+  :root {
+    --purple:   #6c5ce7;
+    --purple-lt:#a29bfe;
+    --green:    #00b894;
+    --red:      #e17055;
+    --orange:   #fd9644;
+    --bg:       #f4f3ff;
+    --surface:  #ffffff;
+    --border:   #ece9ff;
+    --text:     #1e1b3a;
+    --muted:    #8b87a8;
+    --radius:   16px;
+    --shadow:   0 4px 24px rgba(108,92,231,0.08);
+  }
+
+  body { background: var(--bg); font-family: 'Segoe UI', sans-serif; }
+
+  .settings-wrap {
+    max-width: 700px;
+    margin: 0 auto;
+    padding: 2rem 1.5rem 4rem;
+  }
+
+  .settings-header { margin-bottom: 2rem; }
+  .settings-header h2 {
+    font-size: 1.8rem; font-weight: 800;
+    margin: 0 0 4px; color: var(--text);
+  }
+  .settings-header p { margin: 0; color: var(--muted); font-size: 0.88rem; }
+
+  .flash-wrap .flash { display: none; }
+  .flash-wrap .flash:last-child { display: flex; }
+
+  .flash {
+    padding: 12px 16px; border-radius: 12px;
+    font-size: 0.88rem; margin-bottom: 1.2rem;
+    align-items: center; gap: 8px; font-weight: 500;
+  }
+  .flash.success { background:#e8faf4; color:#00a67e; border:1.5px solid #b2f0e0; }
+  .flash.error   { background:#ffe8e4; color:#e17055; border:1.5px solid #ffc8be; }
+
+  .s-card {
+    background: var(--surface);
+    border: 1.5px solid var(--border);
+    border-radius: var(--radius);
+    padding: 1.6rem 1.8rem;
+    box-shadow: var(--shadow);
+    margin-bottom: 1.2rem;
+    animation: fadeUp .35s ease both;
+  }
+  .s-card:nth-child(2) { animation-delay: .06s; }
+  .s-card:nth-child(3) { animation-delay: .12s; }
+
+  .s-card-title {
+    font-size: 0.95rem; font-weight: 700; color: var(--text);
+    margin: 0 0 1.2rem; padding-bottom: 12px;
+    border-bottom: 1.5px solid var(--border);
+    display: flex; align-items: center; gap: 8px;
+  }
+
+  .avatar-row {
+    display: flex; align-items: center; gap: 16px;
+    padding: 14px 16px; background: var(--bg);
+    border-radius: 12px; border: 1.5px solid var(--border);
+    margin-bottom: 1.2rem;
+  }
+
+  .avatar-circle {
+    width: 56px; height: 56px; border-radius: 50%;
+    background: linear-gradient(135deg, var(--purple), var(--purple-lt));
+    display: flex; align-items: center; justify-content: center;
+    font-size: 22px; font-weight: 800; color: #fff;
+    flex-shrink: 0; box-shadow: 0 4px 14px rgba(108,92,231,0.3);
+  }
+
+  .avatar-info strong { display:block; font-size:0.95rem; font-weight:700; color:var(--text); }
+  .avatar-info span   { font-size:0.82rem; color:var(--muted); }
+
+  .form-row-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  .form-group { margin-bottom: 14px; }
+
+  .form-group label {
+    display: block; font-size: 0.72rem; font-weight: 700;
+    color: var(--muted); text-transform: uppercase;
+    letter-spacing: .05em; margin-bottom: 6px;
+  }
+
+  .form-group input {
+    width: 100%; padding: 10px 13px;
+    border: 1.5px solid var(--border); border-radius: 10px;
+    font-size: 0.9rem; color: var(--text); background: var(--bg);
+    outline: none; transition: border-color .2s, box-shadow .2s;
+    font-family: inherit;
+  }
+  .form-group input:focus {
+    border-color: var(--purple);
+    box-shadow: 0 0 0 3px rgba(108,92,231,0.1);
+    background: #fff;
+  }
+  .form-group input:disabled {
+    background: #f0eeff; color: var(--muted); cursor: not-allowed;
+  }
+
+  .pw-bar-wrap {
+    height: 4px; background: var(--border);
+    border-radius: 4px; margin-top: 6px; overflow: hidden;
+  }
+  .pw-bar-fill {
+    height: 100%; border-radius: 4px;
+    width: 0%; transition: width .3s, background .3s;
+  }
+  .pw-hint  { font-size: 0.75rem; margin-top: 4px; color: var(--muted); }
+  .match-msg { font-size: 0.75rem; margin-top: 4px; }
+
+  /* ── Forgot password ── */
+  .forgot-link {
+    font-size: 0.78rem; color: var(--purple);
+    font-weight: 600; text-decoration: underline;
+    display: inline-block; margin-bottom: 14px;
+    cursor: pointer; background: none; border: none;
+    padding: 0; font-family: inherit;
+  }
+
+  .forgot-section {
+    display: none;
+    background: #f0eeff; border: 1.5px solid var(--border);
+    border-radius: 12px; padding: 14px 16px;
+    margin-bottom: 14px; font-size: 0.85rem;
+    color: var(--text); line-height: 1.7;
+  }
+  .forgot-section.show { display: block; }
+
+  .forgot-section a {
+    color: var(--purple); font-weight: 700;
+    text-decoration: none;
+  }
+  .forgot-section a:hover { text-decoration: underline; }
+
+  .btn-save {
+    background: linear-gradient(135deg, var(--purple), var(--purple-lt));
+    color: #fff; border: none; padding: 11px 24px;
+    border-radius: 10px; font-size: 0.9rem; font-weight: 700;
+    cursor: pointer; font-family: inherit;
+    transition: opacity .2s, transform .15s;
+  }
+  .btn-save:hover { opacity:.9; transform:translateY(-1px); }
+
+  .btn-outline {
+    background: transparent; color: var(--muted);
+    border: 1.5px solid var(--border); padding: 10px 20px;
+    border-radius: 10px; font-size: 0.9rem; font-weight: 600;
+    cursor: pointer; font-family: inherit; transition: all .2s;
+  }
+  .btn-outline:hover { border-color:var(--purple); color:var(--purple); }
+
+  .btn-row { display:flex; gap:10px; margin-top:4px; flex-wrap:wrap; }
+
+  .danger-card {
+    background: #fff8f7; border: 1.5px solid #ffd0c8;
+    border-radius: var(--radius); padding: 1.6rem 1.8rem;
+    margin-bottom: 1.2rem; animation: fadeUp .35s .18s ease both;
+  }
+  .danger-card .s-card-title { color: var(--red); border-bottom-color: #ffd0c8; }
+
+  .danger-desc {
+    font-size: 0.88rem; color: var(--muted);
+    margin: 0 0 14px; line-height: 1.65;
+  }
+
+  .warn-list {
+    background: #ffe8e4; border-radius: 10px;
+    padding: 12px 16px; margin-bottom: 16px;
+    font-size: 0.82rem; color: var(--red); line-height: 2;
+  }
+
+  .btn-delete {
+    background: #fff0ee; color: var(--red);
+    border: 1.5px solid #ffd0c8; padding: 11px 22px;
+    border-radius: 10px; font-size: 0.9rem; font-weight: 700;
+    cursor: pointer; font-family: inherit; transition: all .2s;
+  }
+  .btn-delete:hover { background:var(--red); color:#fff; border-color:var(--red); }
+
+  .modal-overlay {
+    display: none; position: fixed; inset: 0;
+    background: rgba(30,27,58,0.5); z-index: 1000;
+    align-items: center; justify-content: center;
+    backdrop-filter: blur(3px);
+  }
+  .modal-overlay.show { display: flex; }
+
+  .modal-box {
+    background: #fff; border-radius: 22px;
+    padding: 2.5rem 2rem; max-width: 380px; width: 92%;
+    text-align: center; box-shadow: 0 30px 80px rgba(0,0,0,0.18);
+    animation: popIn .25s ease;
+  }
+
+  @keyframes popIn {
+    from { transform: scale(.9); opacity: 0; }
+    to   { transform: scale(1);  opacity: 1; }
+  }
+
+  .modal-box .m-icon { font-size: 3rem; display:block; margin-bottom:12px; }
+  .modal-box h3 { font-size:1.2rem; font-weight:800; margin:0 0 8px; color:var(--text); }
+  .modal-box p  { color:var(--muted); font-size:0.88rem; margin:0 0 1.6rem; line-height:1.6; }
+  .modal-btns   { display:flex; gap:10px; justify-content:center; flex-wrap:wrap; }
+
+  @keyframes fadeUp {
+    from { opacity:0; transform:translateY(14px); }
+    to   { opacity:1; transform:translateY(0); }
+  }
+
+  @media (max-width: 600px) {
+    .form-row-2 { grid-template-columns: 1fr; }
+    .s-card, .danger-card { padding: 1.2rem; }
+  }
+</style>
+
+<div class="settings-wrap">
+
+  <div class="settings-header">
+    <h2>⚙️ Settings</h2>
+    <p>Manage your profile and account preferences</p>
+  </div>
+
+  <div class="flash-wrap">
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% for category, message in messages %}
+        <div class="flash {{ category }}">
+          {% if category == 'success' %}✅{% else %}❌{% endif %}
+          {{ message }}
+        </div>
+      {% endfor %}
+    {% endwith %}
+  </div>
+
+  <!-- PROFILE -->
+  <div class="s-card">
+    <div class="s-card-title">👤 Profile Information</div>
+
+    <div class="avatar-row">
+      <div class="avatar-circle" id="avatarCircle">
+        {{ user.name[0].upper() if user.name else '?' }}
+      </div>
+      <div class="avatar-info">
+        <strong>{{ user.name }}</strong>
+        <span>{{ user.email }}</span>
+      </div>
+    </div>
+
+    <form method="POST" action="/settings/update-profile">
+      <div class="form-row-2">
+        <div class="form-group">
+          <label>Full Name</label>
+          <input type="text" name="name" id="nameInput"
+                 value="{{ user.name }}"
+                 oninput="updateAvatar(this.value)"
+                 placeholder="Your full name" required>
+        </div>
+        <div class="form-group">
+          <label>Email Address</label>
+          <input type="email" name="email"
+                 value="{{ user.email }}"
+                 placeholder="your@email.com" required>
+        </div>
+      </div>
+      <div class="btn-row">
+        <button type="submit" class="btn-save">Save Changes</button>
+        <button type="button" class="btn-outline"
+                onclick="window.location='/dashboard'">Cancel</button>
+      </div>
+    </form>
+  </div>
+
+  <!-- CHANGE PASSWORD -->
+  <div class="s-card">
+    <div class="s-card-title">🔒 Change Password</div>
+
+    <form method="POST" action="/settings/change-password">
+      <div class="form-group">
+        <label>Current Password</label>
+        <input type="password" name="current_password"
+               placeholder="Enter your current password" required>
+      </div>
+
+      <!-- ✅ FIXED: proper button that toggles the section -->
+      <button type="button" class="forgot-link" onclick="toggleForgot()">
+        Forgot your current password?
+      </button>
+
+      <!-- ✅ FIXED: shows a link to /forgot-password page -->
+      <div class="forgot-section" id="forgotSection">
+        🔑 <strong>No problem!</strong> You can reset your password via email.<br><br>
+        <a href="/forgot-password">→ Click here to reset your password</a><br><br>
+        We'll send a reset link to your registered email address.
+      </div>
+
+      <div class="form-row-2">
+        <div class="form-group">
+          <label>New Password</label>
+          <input type="password" name="new_password" id="newPw"
+                 placeholder="Min 6 characters"
+                 oninput="checkStrength(this.value)" required>
+          <div class="pw-bar-wrap">
+            <div class="pw-bar-fill" id="pwBar"></div>
+          </div>
+          <div class="pw-hint" id="pwHint">Min 6 characters</div>
+        </div>
+        <div class="form-group">
+          <label>Confirm New Password</label>
+          <input type="password" name="confirm_password" id="confirmPw"
+                 placeholder="Repeat new password"
+                 oninput="checkMatch()" required>
+          <div class="match-msg" id="matchMsg"></div>
+        </div>
+      </div>
+
+      <div class="btn-row">
+        <button type="submit" class="btn-save">Update Password</button>
+      </div>
+    </form>
+  </div>
+
+  <!-- DANGER ZONE -->
+  <div class="danger-card">
+    <div class="s-card-title">⚠️ Danger Zone</div>
+    <p class="danger-desc">
+      Permanently delete your Learnify account and all associated data.
+      This action <strong>cannot be undone</strong>.
+    </p>
+    <div class="warn-list">
+      🗑️ All flashcards and game sessions deleted<br>
+      🏅 All earned badges removed<br>
+      📊 All quiz history and analytics erased<br>
+      🔐 Logged out immediately
+    </div>
+    <button class="btn-delete" onclick="showDeleteModal()">
+      🗑️ Delete My Account
+    </button>
+  </div>
+
+</div>
+
+<!-- Delete Modal -->
+<div class="modal-overlay" id="deleteModal">
+  <div class="modal-box">
+    <span class="m-icon">⚠️</span>
+    <h3>Delete Account?</h3>
+    <p>All your data will be <strong>permanently deleted</strong>. This cannot be undone.</p>
+    <div class="modal-btns">
+      <button class="btn-outline" onclick="hideDeleteModal()">No, Keep It</button>
+      <form method="POST" action="/settings/delete-account" style="display:inline;">
+        <button type="submit" class="btn-delete">Yes, Delete</button>
+      </form>
+    </div>
+  </div>
+</div>
+
+<script>
+function updateAvatar(val) {
+  document.getElementById('avatarCircle').textContent =
+    val.trim().charAt(0).toUpperCase() || '?';
+}
+
+// ✅ FIXED: no HTML inside JS
+function toggleForgot() {
+  document.getElementById('forgotSection').classList.toggle('show');
+}
+
+function checkStrength(val) {
+  const bar  = document.getElementById('pwBar');
+  const hint = document.getElementById('pwHint');
+  let score  = 0;
+  if (val.length >= 6)           score++;
+  if (val.length >= 10)          score++;
+  if (/[A-Z]/.test(val))         score++;
+  if (/[0-9]/.test(val))         score++;
+  if (/[^A-Za-z0-9]/.test(val)) score++;
+
+  const levels = [
+    { w:'0%',   bg:'#ece9ff', label:'Min 6 characters', color:'#8b87a8' },
+    { w:'20%',  bg:'#e17055', label:'😟 Very weak',      color:'#e17055' },
+    { w:'40%',  bg:'#fd9644', label:'😐 Weak',           color:'#fd9644' },
+    { w:'60%',  bg:'#ffd32a', label:'🙂 Fair',           color:'#e6a817' },
+    { w:'80%',  bg:'#a29bfe', label:'😊 Good',           color:'#6c5ce7' },
+    { w:'100%', bg:'#00b894', label:'💪 Strong!',        color:'#00b894' },
+  ];
+  const l = levels[Math.min(score, 5)];
+  bar.style.width      = l.w;
+  bar.style.background = l.bg;
+  hint.textContent     = l.label;
+  hint.style.color     = l.color;
+  checkMatch();
+}
+
+function checkMatch() {
+  const pw1 = document.getElementById('newPw').value;
+  const pw2 = document.getElementById('confirmPw').value;
+  const msg = document.getElementById('matchMsg');
+  if (!pw2) { msg.textContent = ''; return; }
+  if (pw1 === pw2) {
+    msg.textContent = '✓ Passwords match';
+    msg.style.color = '#00b894';
+  } else {
+    msg.textContent = '✗ Passwords do not match';
+    msg.style.color = '#e17055';
+  }
+}
+
+function showDeleteModal() {
+  document.getElementById('deleteModal').classList.add('show');
+}
+function hideDeleteModal() {
+  document.getElementById('deleteModal').classList.remove('show');
+}
+document.getElementById('deleteModal').addEventListener('click', function(e) {
+  if (e.target === this) hideDeleteModal();
+});
+</script>
+
+{% endblock %}

@@ -1,0 +1,151 @@
+/* ================= OVERLAY ================= */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.45);
+  display: none;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  backdrop-filter: blur(3px);
+}
+
+/* ================= MODAL BOX ================= */
+.auth-modal {
+  position: relative; /* REQUIRED for ❌ button */
+  background: #f6eff9;
+  width: 720px;
+  border-radius: 26px;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  overflow: hidden;
+  animation: scaleIn 0.35s ease;
+  box-shadow: 0 25px 60px rgba(0,0,0,0.2);
+}
+
+/* ================= LEFT VISUAL ================= */
+.modal-visual {
+  background: linear-gradient(135deg, #cbb4d4, #a88bc1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 120px;
+}
+
+/* ================= RIGHT FORM ================= */
+.modal-form {
+  background: #ffffff;
+  padding: 42px;
+}
+
+.modal-form h2 {
+  margin-bottom: 6px;
+  font-size: 24px;
+  color: #3f2e4d;
+}
+
+.modal-form p {
+  font-size: 14px;
+  color: #666;
+  margin-bottom: 26px;
+}
+
+.modal-form input {
+  width: 100%;
+  padding: 13px 14px;
+  margin-bottom: 15px;
+  border-radius: 14px;
+  border: 1px solid #ddd;
+  font-size: 14px;
+  outline: none;
+  transition: border 0.25s ease, box-shadow 0.25s ease;
+}
+
+.modal-form input:focus {
+  border-color: #a88bc1;
+  box-shadow: 0 0 0 3px rgba(168,139,193,0.2);
+}
+
+/* ================= PRIMARY BUTTON ================= */
+.modal-btn {
+  width: 100%;
+  padding: 13px;
+  background: #8e6fb1;
+  color: white;
+  border: none;
+  border-radius: 16px;
+  font-size: 15px;
+  cursor: pointer;
+  transition: background 0.25s ease, transform 0.15s ease;
+}
+
+.modal-btn:hover {
+  background: #7c5aa2;
+  transform: translateY(-1px);
+}
+
+/* ================= LINKS ================= */
+.modal-link {
+  text-align: center;
+  margin-top: 16px;
+  font-size: 14px;
+  color: #555;
+}
+
+.modal-link a {
+  color: #8e6fb1;
+  font-weight: 500;
+  text-decoration: none;
+}
+
+.modal-link a:hover {
+  text-decoration: underline;
+}
+
+/* ================= CLOSE (X) BUTTON ================= */
+.modal-close {
+  position: absolute;
+  top: 16px;
+  right: 18px;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  background: #f2edf7;
+  color: #6a4f85;
+  font-size: 22px;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: background 0.25s ease, transform 0.25s ease;
+}
+
+.modal-close:hover {
+  background: #e2d6ef;
+  transform: rotate(90deg);
+}
+
+/* ================= ANIMATION ================= */
+@keyframes scaleIn {
+  from {
+    transform: scale(0.92);
+    opacity: 0;
+  }
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+/* ================= RESPONSIVE ================= */
+@media (max-width: 768px) {
+  .auth-modal {
+    width: 92%;
+    grid-template-columns: 1fr;
+  }
+
+  .modal-visual {
+    display: none;
+  }
+}
